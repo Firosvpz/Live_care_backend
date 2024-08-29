@@ -17,7 +17,7 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
+, "src/usecases"  ],
   "exclude": [
     "node_modules"
   ]

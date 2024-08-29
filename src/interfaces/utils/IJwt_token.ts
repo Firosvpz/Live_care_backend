@@ -1,6 +1,6 @@
+
 import { JwtPayload } from "jsonwebtoken";
 
-// JWT Token Interface
 interface IJwt_token {
     create_jwt_token(id: string, role: string): string
     verify_jwt_token(token: string): JwtPayload | null

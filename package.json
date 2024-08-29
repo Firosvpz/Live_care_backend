@@ -31,7 +31,9 @@
     "nodemailer": "^6.9.14",
     "react-toastify": "^10.0.5",
     "ts-node": "^10.9.2",
-    "validators": "^0.3.1"
+    "validators": "^0.3.1",
+    "winston": "^3.14.2",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

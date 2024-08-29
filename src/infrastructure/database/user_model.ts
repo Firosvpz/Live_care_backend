@@ -1,5 +1,5 @@
 import mongoose, { Schema, Model } from 'mongoose'
-import IUser from 'domain/entities/user'
+import IUser from '../../domain/entities/user'
 
 const userSchema: Schema<IUser> = new Schema({
     name: {
