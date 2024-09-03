@@ -6,6 +6,8 @@
     "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": "./src",
@@ -15,10 +17,6 @@
     },
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src/**/*.ts"
-, "src/usecases"  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }
