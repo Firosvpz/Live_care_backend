@@ -1,86 +1,171 @@
-import Service_provider_usecase from "usecases/service_provider_usecase";
-import { Request, Response, NextFunction } from "express";
+import ServiceProviderUsecase from "../../usecases/service_provider_usecase";
+import { Request, Response, NextFunction } from 'express';
+import { logger } from "../../infrastructure/utils/combine_log";
+import path from "path";
+import fs from 'fs'
 
-class Service_provider_controller {
-  constructor(private sp_usecase: Service_provider_usecase) {}
-  async verify_sp_email(req: Request, res: Response, next: NextFunction) {
-    try {
-      const sp_info = req.body;
-      console.log('sp-info',sp_info);
-      
-      const response = await this.sp_usecase.find_sp(sp_info);
-      console.log('res:',response);
-      
-      if (response?.status === 200) {
-        throw new Error("User already exist");
-      }
-      if (response?.status === 201) {
-        const token = response.data;
-        return res.status(200).json({
-          success: true,
-          data: token,
-          message: "otp generated and send",
-        });
-      }
-    } catch (error) {
-      next(error);
+
+class ServiceProviderController {
+    constructor(private spUsecase: ServiceProviderUsecase) { }
+
+    async verifyServiceProviderEmail(req: Request, res: Response, next: NextFunction) {
+        try {
+            const spInfo = req.body
+            console.log('body:',req.body);
+            
+            const response = await this.spUsecase.findServiceProvider(spInfo)
+            console.log('response:',response);
+            
+            if (!response) {
+                logger.error("cannot get service provider info")
+                return
+            }
+
+            if (response?.status === 200) {
+                logger.error("email already exist")
+                return
+            }
+
+            if (response?.status === 201) {
+                const token = response.data
+                return res.status(201).json({
+                    success: true,
+                    data: token
+                })
+            }
+        } catch (error) {
+            next(error)
+        }
     }
-  }
 
-  async verify_otp(req: Request, res: Response, next: NextFunction) {
-    try {
-      const auth_header = req.headers.authorization;
-      if (!auth_header) {
-        return res
-          .status(401)
-          .json({ success: false, message: " Authorization header missing" });
-      }
-      const token = req.headers.authorization?.split(" ")[1] as string;
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: " Token missing from autherization header",
-        });
-      }
-      const { otp } = req.body;
-      console.log(otp);
-      if (!otp) {
-        return res
-          .status(400)
-          .json({ success: false, message: " Otp is required " });
-      }
-      const save_sp = await this.sp_usecase.create_sp(token, otp);
+    async verifyOtp(req: Request, res: Response, next: NextFunction) {
+        try {
+            const token = req.headers.authorization?.split(" ")[1] as string;
+            const { otp } = req.body
 
-      if (save_sp?.success) {
-        res.cookie("spToken", save_sp.token, {
-          httpOnly: true, // Prevent JavaScript access to the cookie
-          secure: process.env.NODE_ENV === "production", // Use HTTPS in production
-          sameSite: "strict", // Prevent CSRF attacks
-        });
-      } else {
-        res.status(400).json({ success: false, message: "OTP not verified" });
-      }
-
-      return res.status(200).json({
-        success: true,
-        token: save_sp?.token,
-        message: " OTP verified successfully",
-      });
-    } catch (error) {
-      next(error);
+            const serviceProvider = await this.spUsecase.saveServiceProvider(token, otp)
+            if (serviceProvider?.success) {
+                const { token } = serviceProvider.data
+                res.cookie("serviceProviderToken", token)
+                return res
+                    .status(201)
+                    .json({ success: true, data: { token }, message: "Otp verified" })
+            } else {
+                logger.error("OTP not verified", 400);
+                return
+            }
+        } catch (error) {
+            next(error)
+        }
     }
-  }
+
+    async resendOtp(req: Request, res: Response, next: NextFunction) {
+        try {
+            const token = req.headers.authorization?.split(" ")[1] as string;
+            if (!token) {
+                logger.error("Unauthorized user", 401);
+            }
+
+            const serviceProviderInfo = await this.spUsecase.getServiceProviderByToken(token)
+            if(!serviceProviderInfo){
+                logger.error("user not found",404)
+            }
+            const response = await this.spUsecase.findServiceProvider(serviceProviderInfo)
+
+            if(response?.status === 200){
+                logger.error("User already exist",400)
+            }
+
+            if(response?.status === 201){
+                const token = response.data
+                return res.status(201).json({
+                    success:true,token
+                })
+            }
+        } catch (error) {
+            next(error)
+        }
+    }
+    async verifyLogin(req: Request, res: Response, next: NextFunction){
+        try {
+            const {email,password}=req.body
+            const serviceProvider = await this.spUsecase.serviceProviderLogin(email,password)
+            if(serviceProvider?.success){
+                res.cookie("serviceProviderToken",serviceProvider.data?.token,{
+                    expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // Expires in 2 days
+                    httpOnly: true,
+                    secure: true, // use true if you're serving over https
+                    sameSite: 'none' // allows cross-site cookie usage
+                })
+                res.status(200).json(serviceProvider)
+            }else{
+                throw new Error(serviceProvider?.message)
+            }
+           
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async verifyDetails(req: Request, res: Response, next: NextFunction){
+        try {
+            // const{exp_year,address,service,specialization,qualification,rate} = req.body
+            // console.log(req.body);
+            
+            const{profile_picture,experience_crt}=req.files as {
+                [fieldname:string]:Express.Multer.File[]
+            };
+
+            if(!profile_picture || ! experience_crt){
+                logger.error("All files must be uploaded",400)
+            }
+
+            const serviceProviderDetails = {
+                ...req.body,
+                ...req.files,
+                _id:req.serviceProviderId,
+            }
+            // const serviceProviderId = req.serviceProviderId
+
+           
+            const updatedServiceProvider = await this.spUsecase.saveServiceProviderDetails(serviceProviderDetails)
+            if(updatedServiceProvider?.success){
+                [profile_picture,experience_crt].forEach((files)=>{
+                    files.forEach((file)=>{
+                        const filepath = path.join(
+                            __dirname,
+                            "../../infrastructure/public/images",
+                            file.filename
+                        );
+                        fs.unlink(filepath,(err)=>{
+                            if(err){
+                                logger.error("error while deleting files from server ",err)
+                            }
+                        })
+                    })
+                })
+                return res.status(200).json({
+                    success:true,
+                    message:"details verified successfully",
+                    data:updatedServiceProvider
+                })
+            }else{
+                logger.error("service provider not found",404)
+            }
+        } catch (error) {
+          next(error)
+        }
+    }
+    
   async home(req: Request, res: Response, next: NextFunction) {
     try {
       const welcomeMessage = "Welcome to the home page!";
 
-      return res
-        .status(200)
-        .json({ success: true, data: { message: welcomeMessage } });
+      return res.status(200).json({ success: true, data: { message: welcomeMessage } });
     } catch (error) {
-      next(error);
+      next(error)
     }
   }
 }
 
-export default Service_provider_controller;
+export default ServiceProviderController

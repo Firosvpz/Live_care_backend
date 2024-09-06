@@ -1,42 +1,53 @@
+import ServiceProviderController from "../../adapters/controllers/service_provider_controller";
 import express from "express";
-const router = express.Router();
+import { uploadStorage } from "../../infrastructure/middlewares/multer";
+import serviceProviderAuth from "../../infrastructure/middlewares/serviceProviderAuth";
+import ServiceProviderRepository from "../../infrastructure/repositories/sp_respository";
+import FileStorageService from "../../infrastructure/utils/File_storage";
+import GenerateOtp from "../../infrastructure/utils/generate_OTP";
+import HashPassword from "../../infrastructure/utils/hash_password";
+import JwtToken from "../../infrastructure/utils/jwt_token";
+import MailService from "../../infrastructure/utils/mail_service";
+import ServiceProviderUsecase from "../../usecases/service_provider_usecase";
+const serviceProvider = express.Router();
 
-import Service_provider_controller from "../../adapters/controllers/service_provider_controller";
-import Service_provider_usecase from "../../usecases/service_provider_usecase";
-import Service_provider_repository from "../repositories/sp_respository";
-import Hash_password from "../../infrastructure/utils/hash_password";
-import Jwt_token from "../../infrastructure/utils/jwt_token";
-import Otp_generate from "../../infrastructure/utils/generate_OTP";
-import Mail_service from "../../infrastructure/utils/mail_service";
 
-const sp_repository = new Service_provider_repository();
-const otp = new Otp_generate();
-const jwt = new Jwt_token(
-  process.env.JWT_ACCESS_SECRET as string,
-  process.env.JWT_REFRESH_TOKEN as string,
-);
-const hash = new Hash_password();
-const mail = new Mail_service();
+const otp=new GenerateOtp()
+const hash = new HashPassword()
+const jwt=new JwtToken(process.env.JWT_SECRET_KEY as string)
+const mail=new MailService()
+const fileStorage = new FileStorageService()
 
-const usecase = new Service_provider_usecase(
-  sp_repository,
-  otp,
-  jwt,
-  mail,
-  hash,
-);
-const controller = new Service_provider_controller(usecase);
 
-router.post('/sp-register',(req,res,next)=>{
-    controller.verify_sp_email(req,res,next)
+const spRepository = new ServiceProviderRepository()
+const spUsecase = new ServiceProviderUsecase(spRepository,mail,jwt,hash,otp,fileStorage)
+const spController = new ServiceProviderController(spUsecase)
+
+
+serviceProvider.post("/sp-register",uploadStorage.single('experience_crt'),(req,res,next)=>{
+    spController.verifyServiceProviderEmail(req,res,next)
 })
 
-router.post('/verify-sp-otp',(req,res,next)=>{
-    controller.verify_otp(req,res,next)
+serviceProvider.post("/verify-sp-otp",(req,res,next)=>{
+    spController.verifyOtp(req,res,next)
 })
 
-router.get("/sp-home",(req,res,next)=>{
-    controller.home(req,res,next)
+serviceProvider.post("/resend-sp-otp",(req,res,next)=>{
+    spController.resendOtp(req,res,next)
 })
 
-export default router
+serviceProvider.post("/sp-login",(req,res,next)=>{
+    spController.verifyLogin(req,res,next)
+})
+
+serviceProvider.post("/verify-details",serviceProviderAuth,uploadStorage.fields([
+    {name:"profile_picture",maxCount:1},
+    {name:"expirience_crt",maxCount:1}
+]),(req,res,next)=>{
+    spController.verifyDetails(req,res,next)
+})
+
+serviceProvider.get("/sp-home",(req,res,next)=>{
+    spController.home(req,res,next)
+})
+export default serviceProvider

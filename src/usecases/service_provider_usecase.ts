@@ -1,85 +1,155 @@
-import IService_provider_repository from "../interfaces/repositories/ISp_repository";
-import IJwt_token from "interfaces/utils/IJwt_token";
-import IGenerate_otp from "interfaces/utils/IGenerate_otp";
-import IHash_password from "interfaces/utils/IHash_password";
-import IMail_service from "interfaces/utils/IMail_service";
-import IService_provider from "domain/entities/service_provider";
-import { logger } from "../infrastructure/utils/combine_log";
+import IServiceProviderRepository from '../interfaces/repositories/ISp_repository';
+import IMailService from '../interfaces/utils/IMail_service';
+import IJwtToken from '../interfaces/utils/IJwt_token';
+import IGenerateOtp from '../interfaces/utils/IGenerate_otp';
+import IHashPassword from '../interfaces/utils/IHash_password';
+import IFileStorageService from '../interfaces/utils/IFile_storage_service';
+import { logger } from '../infrastructure/utils/combine_log';
+import IService_provider from '../domain/entities/service_provider';
 
-class Service_provider_usecase {
-  constructor(
-    private sp_repository: IService_provider_repository,
-    private generate_otp: IGenerate_otp,
-    private jwt_token: IJwt_token,
-    private mail_service: IMail_service,
-    private hash_password: IHash_password,
-  ) {}
-  
-  async create_sp(token: string, otp: string) {
-    try {
-      const decoded_token = this.jwt_token.verify_jwt_token(token);
-      console.log('tokendecode:',decoded_token);
-      
-      if (!decoded_token || decoded_token.info) {
-        throw new Error("Failed to get sp info");
-      }
-      if (otp !== decoded_token.otp) {
-        throw new Error("invalid otp");
-      }
-      const { password } = decoded_token.info;
-      const hashed_password = this.hash_password.hash(password);
-      decoded_token.info.password = hashed_password;
+// type DecodedToken = {
+//   info: { userId: string };
+//   otp: string;
+//   iat: number;
+//   exp: number;
+// }
 
-      const save_sp = await this.sp_repository.create_service_provider(
-        decoded_token.info,
-      );
+class ServiceProviderUsecase {
+    constructor(
+        private spRepository: IServiceProviderRepository,
+        private mailService: IMailService,
+        private jwtToken: IJwtToken,
+        private hashPassword: IHashPassword,
+        private generateOtp: IGenerateOtp,
+        private fileStorage: IFileStorageService
+    ) { }
 
-      if (!save_sp) {
-        throw new Error("Failed to add new service provider");
-      }
-      const new_token = await this.jwt_token.create_access_token(
-        save_sp._id as string,
-        "service_provider",
-      );
-      return {
-        success: true,
-        token: new_token,
-      };
-    } catch (error) {
-      console.log(error);
+    async findServiceProvider(serviceProviderInfo: IService_provider) {
+        const serviceProvider = await this.spRepository.findByEmail(serviceProviderInfo.email)
+        if (serviceProvider) {
+            return {
+                status: 200,
+                data: serviceProvider,
+                message: "found service provider"
+            }
+        }
+        else {
+            const otp: string = this.generateOtp.generateOtp()
+            const token = this.jwtToken.otpToken(serviceProviderInfo, otp)
+            const { name, email } = serviceProviderInfo
+            await this.mailService.sendMail(name, email, otp)
+            return {
+                status: 201,
+                data: token,
+                message: "otp generated succesfully"
+            }
+        }
     }
-  }
-  async find_sp(sp_info: IService_provider) {
-    try {
-      const sp = await this.sp_repository.find_by_email(sp_info.email);
-      if (sp) {
-        return {
-          status: 200,
-          data: sp,
-          message: "found service provider",
-        };
-      } else {
-        const otp: string = this.generate_otp.generate_otp();
-        logger.info("otp generated for service provider", {
-          email: sp_info.email,
-        });
-        const token = this.jwt_token.otp_token(sp_info, otp);
-        console.log("Otp Token created:", token);
 
+    async getServiceProviderByToken(token: string) {
+        const decodedToken = this.jwtToken.verifyJwtToken(token)
+        if (!decodedToken) {
+            logger.error("Invalid token", 400)
+            return
+        }
+        return decodedToken.info
+    }
+
+    async saveServiceProvider(token: string, otp: string) {
+        const decodedToken = await this.jwtToken.verifyJwtToken(token)
+        console.log('decodii',decodedToken);
         
-        const { name, email } = sp_info;
-        await this.mail_service.sendmail(name, email, otp);
+        if (!decodedToken) {
+            logger.error("Invalid token", 401)
+            return
+        }
+        if (otp !== decodedToken.otp) {
+            logger.error("Invalid Otp", 401)
+        }
+        
+
+        const { password } = decodedToken.info
+        const hashedPassword =await this.hashPassword.hash(password)
+        console.log('hashed:',hashedPassword);
+        
+        decodedToken.info.password = hashedPassword
+        console.log('infde:',decodedToken.info);
+        
+        const save_sp = await this.spRepository.saveServiceProvider(decodedToken.info)
+        
+        if (!save_sp) {
+            logger.error("Failed to save service provider")
+            return
+        }
+
+        const newToken = this.jwtToken.createJwtToken(save_sp._id as string, "serviceProvider")
         return {
-          status: 201,
-          data: token,
-          message: "otp generated successfully",
-        };
-      }
-    } catch (error) {
-      logger.error("Error in find user");
-      console.log(error);
+            success: true,
+            data: { token: newToken }
+        }
+
     }
-  }
+
+    async serviceProviderLogin(email: string, password: string) {
+        const serviceProvier = await this.spRepository.findByEmail(email)
+        if (!serviceProvier) {
+            logger.error("User not found", 404)
+            return
+        }
+
+        const passwordMatch = await this.hashPassword.compare(password, serviceProvier?.password)
+        if (!passwordMatch) {
+            logger.error("User not found", 404)
+            return
+        }
+
+        if (serviceProvier.is_blocked) {
+            logger.error("cannot login due to you are in blocked")
+            return
+        }
+
+        const token = this.jwtToken.createJwtToken(serviceProvier._id as string, "serviceProvider")
+        return {
+            success: true,
+            data: {
+                token: token,
+                hasCompletedDetails: serviceProvier.hasCompletedDetails,
+                isApproved: serviceProvier.is_approved
+            },
+            message: "Found Service provider"
+        }
+    }
+
+    async saveServiceProviderDetails(serviceProviderDetails: IService_provider) {
+        const { _id, profile_picture, experience_crt } = serviceProviderDetails
+        const serviceProvider = await this.spRepository.findById(_id as string)
+        if (!serviceProvider) {
+            logger.error("service provider not found", 404)
+            return
+        }
+        const profilePictureUrl = await this.fileStorage.uploadFile(
+            profile_picture, "profile_picture"
+        )
+        const experienceCrtUrl = await this.fileStorage.uploadFile(
+            experience_crt, "experience_crt"
+        )
+        serviceProviderDetails.profile_picture = profilePictureUrl;
+        serviceProviderDetails.experience_crt = experienceCrtUrl;
+        serviceProviderDetails.hasCompletedDetails = true
+
+        const updatedServiceProvider = await this.spRepository.saveServiceProviderDetails(serviceProviderDetails)
+        if(!updatedServiceProvider){
+            logger.error("failed to update service provider details",500)
+        }
+
+        return {
+            success:true,
+            message:"service provider details updated successfully",
+            data:updatedServiceProvider
+        }
+    }
+
+
 }
 
-export default Service_provider_usecase;
+export default ServiceProviderUsecase

@@ -1,10 +1,7 @@
-import { JwtPayload } from "jsonwebtoken";
-
-interface IJwt_token {
-  create_access_token(id: string, role: string): string;
-  verify_jwt_token(token: string): JwtPayload | null;
-  otp_token(info: JwtPayload, otp: string): string;
-  create_refresh_token(id: string, role: string): string;
+import { JwtPayload } from "jsonwebtoken"
+interface IJwtToken {
+    createJwtToken(id:string,role:string):string
+    verifyJwtToken(token:string):JwtPayload | null
+    otpToken(info:JwtPayload,otp:string): string
 }
-
-export default IJwt_token;
+export default IJwtToken

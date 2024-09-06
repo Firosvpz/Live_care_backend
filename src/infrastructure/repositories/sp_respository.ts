@@ -1,32 +1,42 @@
-import IService_provider from "../../domain/entities/service_provider";
-import IService_provider_repository from "../../interfaces/repositories/ISp_repository";
-import { service_provider } from "../../infrastructure/database/service_provider";
+import IServiceProviderRepository from '../../interfaces/repositories/ISp_repository';
+import IService_provider from '../../domain/entities/service_provider';
+import { service_provider } from '../../infrastructure/database/service_provider';
+import { logger } from '../../infrastructure/utils/combine_log';
 
-class Service_provider_repository implements IService_provider_repository {
-  // create new sp
-  async create_service_provider(
-    sp: IService_provider,
-  ): Promise<IService_provider | null> {
-    const new_sp = new service_provider(sp);
-    const save_sp = await new_sp.save();
-    return save_sp;
-  }
+class ServiceProviderRepository implements IServiceProviderRepository {
 
-  async find_by_email(email: string): Promise<IService_provider | null> {
-    const exist_sp = await service_provider.findOne({ email });
-    return exist_sp;
-  }
+    async findByEmail(email: string): Promise<IService_provider | null> {
+        const exist_user = await service_provider.findOne({email})
+        if(!exist_user){
+            logger.error("this user is not exist")
+        }
+        return exist_user
+    }
 
-  async find_by_id(_id: string): Promise<IService_provider | null> {
-    const exist_sp = await service_provider.findById(_id);
-    return exist_sp;
-  }
-  async find_service_provider_by_id(
-    _id: string,
-  ): Promise<IService_provider | null> {
-    const exist_sp_data = await service_provider.findById(_id);
-    return exist_sp_data;
-  }
+    async findById(id: string): Promise<IService_provider | null> {
+        const exist_user = await service_provider.findById(id)
+        if(!exist_user){
+            logger.error("cannot find user in this userid")
+        }
+        return exist_user
+    }
+
+    async saveServiceProvider(serviceProvider: IService_provider): Promise<IService_provider | null> {
+        const new_sp = new service_provider(serviceProvider)
+        const save_sp = await new_sp.save()
+        if(!save_sp){
+            logger.error("cannot save this provider")
+        }
+        return save_sp
+    }
+
+    async saveServiceProviderDetails(serviceProviderDetails:IService_provider):Promise<IService_provider | null> {
+        const updatedServiceProvider = await service_provider.findByIdAndUpdate(
+            serviceProviderDetails._id,serviceProviderDetails,{new:true}
+        )
+        return updatedServiceProvider
+    }
+
 }
 
-export default Service_provider_repository;
+export default ServiceProviderRepository

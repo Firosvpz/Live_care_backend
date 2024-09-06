@@ -1,37 +1,42 @@
-import express from "express";
-const router = express.Router();
+import UserController from "../../adapters/controllers/user_controller"
+import express from "express"
+import UserRepository from "../../infrastructure/repositories/user_repository"
+import GenerateOtp from "../../infrastructure/utils/generate_OTP"
+import HashPassword from "../../infrastructure/utils/hash_password"
+import JwtToken from "../../infrastructure/utils/jwt_token"
+import MailService from "../../infrastructure/utils/mail_service"
+import UserUsecase from "../../usecases/user_usecase"
+const router = express.Router()
 
-import User_controller from "../../adapters/controllers/user_controller";
-import User_usecase from "../../usecases/user_usecase";
-import User_repository from "../repositories/user_repository";
-import Hash_password from "../utils/hash_password";
-import Jwt_token from "../utils/jwt_token";
-import Otp_generate from "../utils/generate_OTP";
-import Mail_service from "../utils/mail_service";
+const userRepository = new UserRepository()
+const otp=new GenerateOtp()
+const hash = new HashPassword()
+const jwt=new JwtToken(process.env.JWT_SECRET_KEY as string)
+const mail=new MailService()
 
-const user_repoitory = new User_repository();
-const otp = new Otp_generate();
-const jwt = new Jwt_token(
-  process.env.JWT_ACCESS_SECRET as string,
-  process.env.JWT_REFRESH_TOKEN as string,
-);
-const hash = new Hash_password();
-const mail = new Mail_service();
 
-const usecase = new User_usecase(user_repoitory, jwt, otp, mail, hash);
-const controller = new User_controller(usecase);
+const userCase = new UserUsecase(userRepository,otp,hash,jwt,mail)
+const controller = new UserController(userCase)
 
-router.post("/user-register", (req, res, next) => {
-  controller.verify_user_email(req, res, next);
-});
-router.post("/verify-otp", (req, res, next) => {
-  controller.verify_otp(req, res, next);
-});
-router.post("/user-login", (req, res, next) => {
-  controller.verify_login(req, res, next);
-});
+router.post("/user-register",(req,res,next)=>{
+  controller.verifyUserEmail(req,res,next)
+})
 
-router.get("/user-home", (req, res, next) => {
-  controller.home(req, res, next);
-});
-export default router;
+router.post("/verify-user-otp",(req,res,next)=>{
+  controller.verifyOtp(req,res,next)
+})
+
+router.post("/resend-otp",(req,res,next)=>{
+  controller.resendOtp(req,res,next)
+})
+
+router.post("/user-login",(req,res,next)=>{
+  controller.verifyLogin(req,res,next)
+})
+
+router.get("/user-home",(req,res,next)=>{
+  controller.home(req,res,next)
+})
+
+
+export default router

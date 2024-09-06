@@ -1,42 +1,33 @@
-import users from "../database/user_model";
-import IUser from "../../domain/entities/user";
-import IUser_repository from "../../interfaces/repositories/IUser_repository";
-import { logger } from "../utils/combine_log";
+import IUserRepository from '../../interfaces/repositories/IUser_repository';
+import IUser from '../../domain/entities/user';
+import users from '../../infrastructure/database/user_model';
+import { logger } from '../../infrastructure/utils/combine_log';
 
-class User_repository implements IUser_repository {
-  // Create a New User
-  async create_user(user: IUser): Promise<IUser | null> {
-    try {
-      const new_user = new users(user);
-      const saved_user = await new_user.save();
-      return saved_user;
-    } catch (error) {
-      logger.error(`can not save the new user ${error}`);
-      return null;
-    }
+
+class UserRepository implements IUserRepository {
+
+  async findUserByEmail(email: string): Promise<IUser | null> {
+    const exist_user = await users.findOne({ email })
+    return exist_user
   }
 
-  // Find User By Email
-  async find_by_email(email: string): Promise<IUser | null> {
-    try {
-      const exist_user = await users.findOne({ email });
-      return exist_user;
-    } catch (error) {
-      logger.error(`Unable to find user by email ${error}`);
-      return null;
+  async findUserById(id: string): Promise<IUser | null> {
+    const user_data = await users.findById(id)
+    if(!user_data){
+      logger.error("cannot find user from this userid")
+      throw new Error("user not found")
     }
+    return user_data
   }
 
-  // Find User By User_id
-  async find_by_user_id(user_id: string): Promise<IUser | null> {
-    try {
-      const exist_user = await users.findById({ user_id });
-      return exist_user;
-    } catch (error) {
-      logger.error(`User_id is not exist ${error}`);
-      return null;
+  async saveUser(user: IUser): Promise<IUser | null> {
+    const new_user = new users(user)
+    const save_user = await new_user.save()
+    if(!save_user){
+      logger.error("cannot save this user")
     }
+    return save_user
   }
 }
 
-export default User_repository;
+export default UserRepository

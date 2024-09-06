@@ -1,7 +1,6 @@
-interface IGenerate_otp {
-  generate_otp(length?: number): string;
-  set_expiration(expiration_time: number): void;
-  is_otp_expired(otp: string): boolean;
+ interface IGenerateOtp {
+  generateOtp(length?: number): string
+  setExpiration(expirationTime: number): void;
+  isOtpExpired(otp:string):boolean
 }
-
-export default IGenerate_otp;
+export default IGenerateOtp

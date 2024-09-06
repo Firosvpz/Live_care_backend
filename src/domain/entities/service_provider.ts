@@ -1,4 +1,4 @@
-interface IService_provider extends Document {
+interface IService_provider {
   _id?: string;
   name: string;
   email: string;
@@ -14,5 +14,6 @@ interface IService_provider extends Document {
   address?: string;
   is_approved: boolean;
   is_blocked: boolean;
+  hasCompletedDetails: boolean;
 }
 export default IService_provider;
