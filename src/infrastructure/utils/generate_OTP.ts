@@ -15,8 +15,8 @@ class GenerateOtp implements IGenerateOtp {
       digits.charAt(crypto.randomInt(digits.length)),
     ).join("");
     this.creationTime[otp] = Date.now();
-    console.log('otp:',otp);
-    
+    console.log("otp:", otp);
+
     return otp;
   }
 

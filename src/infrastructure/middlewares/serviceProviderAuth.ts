@@ -24,8 +24,7 @@ const serviceProviderAuth = async (
   next: NextFunction,
 ) => {
   let token = req.cookies.serviceProviderToken;
-  
-  
+
   if (!token) {
     return res.status(401).json({
       success: false,
@@ -34,7 +33,7 @@ const serviceProviderAuth = async (
   }
   try {
     const decodedToken = jwt.verifyJwtToken(token);
-    console.log('gdfhhhh',decodedToken);
+    console.log("gdfhhhh", decodedToken);
     if (decodedToken && decodedToken.role !== "serviceProvider") {
       return res
         .status(401)

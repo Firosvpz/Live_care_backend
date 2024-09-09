@@ -14,10 +14,9 @@ class ServiceProviderController {
   ) {
     try {
       const spInfo = req.body;
-      console.log("body:", req.body);
 
       const response = await this.spUsecase.findServiceProvider(spInfo);
-      console.log("response:", response);
+      
 
       if (!response) {
         logger.error("cannot get service provider info");
@@ -102,8 +101,8 @@ class ServiceProviderController {
         email,
         password,
       );
-      console.log('sepLog:',serviceProvider);
-      
+      console.log("sepLog:", serviceProvider);
+
       if (serviceProvider?.success) {
         res.cookie("serviceProviderToken", serviceProvider.data?.token, {
           expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // Expires in 2 days
@@ -113,19 +112,38 @@ class ServiceProviderController {
         });
         res.status(200).json(serviceProvider);
       } else {
-        throw new Error(serviceProvider?.message);
+        res.status(400).json(serviceProvider);
       }
     } catch (error) {
+        console.error('Server error:', error); // Log server errors for debugging
+        res.status(500).json({ success: false, message: "An error occurred during login" });
       next(error);
     }
   }
 
   async verifyDetails(req: Request, res: Response, next: NextFunction) {
     try {
-      const{name,email,exp_year,service,specialization,qualification,rate} = req.body
-      console.log('body',name,email,exp_year,specialization,service,qualification,rate,req.body);
-      console.log('files',req.files);
-      
+      const {
+        name,
+        email,
+        exp_year,
+        service,
+        specialization,
+        qualification,
+        rate,
+      } = req.body;
+      console.log(
+        "body",
+        name,
+        email,
+        exp_year,
+        specialization,
+        service,
+        qualification,
+        rate,
+        req.body,
+      );
+      console.log("files", req.files);
 
       const { profile_picture, experience_crt } = req.files as {
         [fieldname: string]: Express.Multer.File[];
@@ -152,8 +170,8 @@ class ServiceProviderController {
               "../../infrastructure/public/images",
               file.filename,
             );
-            console.log('filepath',filepath);
-            
+            console.log("filepath", filepath);
+
             fs.unlink(filepath, (err) => {
               if (err) {
                 logger.error("error while deleting files from server ", err);

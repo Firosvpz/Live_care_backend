@@ -37,7 +37,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 app.use("/user", user_router);
 app.use("/sp", sp_router);
-app.use("/admin",admin_router)
+app.use("/admin", admin_router);
 app.listen(PORT, () => {
   logger.info(`server started on http://localhost:${PORT}`);
 });

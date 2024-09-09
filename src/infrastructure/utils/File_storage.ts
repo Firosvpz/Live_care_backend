@@ -11,9 +11,8 @@ cloudinaryV2.config({
 });
 
 class FileStorageService implements IFileStorageService {
-  async uploadFile(file: any, keyPrefix: string): Promise<string> {    
+  async uploadFile(file: any, keyPrefix: string): Promise<string> {
     try {
-
       const filePath = file[0].path;
 
       // upload file to cloudinary

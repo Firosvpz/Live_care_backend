@@ -21,9 +21,9 @@ const Service_provider_schema: Schema<IService_provider> = new Schema(
       type: String,
       required: true,
     },
-    gender:{
-      type:String,
-      required:false
+    gender: {
+      type: String,
+      required: false,
     },
     service: {
       type: String,

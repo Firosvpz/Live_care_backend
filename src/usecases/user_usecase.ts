@@ -85,14 +85,17 @@ class UserUsecase {
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
-        logger.error("User not found");
+        logger.error("User not found",404);
         return {
           success: false,
           message: "User not found",
         };
       }
-  
-      const passwordMatch = await this.hashPassword.compare(password, user.password);
+
+      const passwordMatch = await this.hashPassword.compare(
+        password,
+        user.password,
+      );
       if (!passwordMatch) {
         logger.error("Password does not match");
         return {
@@ -100,7 +103,7 @@ class UserUsecase {
           message: "Incorrect password",
         };
       }
-  
+
       if (user.is_blocked) {
         logger.error("User is blocked");
         return {
@@ -108,7 +111,7 @@ class UserUsecase {
           message: "This user is blocked",
         };
       }
-  
+
       const token = this.jwtToken.createJwtToken(user._id as string, "user");
       return {
         success: true,
@@ -123,7 +126,6 @@ class UserUsecase {
       };
     }
   }
-  
 }
 
 export default UserUsecase;

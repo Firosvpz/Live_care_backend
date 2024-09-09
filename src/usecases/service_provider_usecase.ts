@@ -132,10 +132,10 @@ class ServiceProviderUsecase {
 
   async saveServiceProviderDetails(serviceProviderDetails: IService_provider) {
     const { _id, profile_picture, experience_crt } = serviceProviderDetails;
-    console.log('sp:',serviceProviderDetails);
+    console.log("sp:", serviceProviderDetails);
 
     const serviceProvider = await this.spRepository.findById(_id as string);
-    
+
     if (!serviceProvider) {
       logger.error("service provider not found", 404);
       return;
@@ -144,7 +144,7 @@ class ServiceProviderUsecase {
       profile_picture,
       "profile_picture",
     );
-    console.log('pic:',profilePictureUrl);
+    console.log("pic:", profilePictureUrl);
 
     const experienceCrtUrl = await this.fileStorage.uploadFile(
       experience_crt,

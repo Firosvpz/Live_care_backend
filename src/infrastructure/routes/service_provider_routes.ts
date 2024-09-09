@@ -56,11 +56,11 @@ serviceProvider.post(
     { name: "experience_crt", maxCount: 1 },
   ]),
   (req, res, next) => {
-    spController.verifyDetails(req, res, next); 
+    spController.verifyDetails(req, res, next);
   },
 );
 
-serviceProvider.get("/sp-home", (req, res, next) => {
+serviceProvider.get("/sp-home", serviceProviderAuth, (req, res, next) => {
   spController.home(req, res, next);
 });
 export default serviceProvider;

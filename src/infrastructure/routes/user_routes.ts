@@ -35,11 +35,11 @@ router.post("/user-login", (req, res, next) => {
   controller.verifyLogin(req, res, next);
 });
 
-router.get("/user-home",userAuth, (req, res, next) => {
+router.get("/user-home", userAuth, (req, res, next) => {
   controller.home(req, res, next);
 });
 
-router.post("/logout",userAuth,(req,res,next)=>{
-  controller.logout(req,res,next)
-})
+router.post("/logout", userAuth, (req, res, next) => {
+  controller.logout(req, res, next);
+});
 export default router;

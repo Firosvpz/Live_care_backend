@@ -20,6 +20,8 @@ class UserController {
         });
       }
     } catch (error) {
+      console.error('Server error:', error); // Log server errors for debugging
+      res.status(500).json({ success: false, message: "An error occurred during login" });
       next(error);
     }
   }
@@ -33,13 +35,11 @@ class UserController {
 
       if (save_user?.success) {
         res.cookie("userToken", save_user.token);
-        return res
-          .status(200)
-          .json({
-            success: true,
-            token: save_user.token,
-            message: "OTP verified",
-          });
+        return res.status(200).json({
+          success: true,
+          token: save_user.token,
+          message: "OTP verified",
+        });
       } else {
         res.status(400).json({ success: false, message: "OTP not verified" });
       }
@@ -75,7 +75,7 @@ class UserController {
     try {
       const { email, password } = req.body;
       const user = await this.user_usecase.userLogin(email, password);
-      
+
       if (user?.success) {
         res.cookie("userToken", user.data?.token, {
           expires: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // Expires in 2 days
@@ -85,24 +85,28 @@ class UserController {
         });
 
         res.status(200).json(user);
+      } else {
+        res.status(400).json(user);
+
+        // throw new Error(user.message);
       }
     } catch (error) {
+      console.error('Server error:', error); // Log server errors for debugging
+      res.status(500).json({ success: false, message: "An error occurred during login" });
       next(error);
     }
   }
 
   async logout(req: Request, res: Response, next: NextFunction) {
-    console.log('hello');
-    
+    console.log("hello");
+
     try {
       res.cookie("userToken", "", {
         httpOnly: true,
         expires: new Date(0),
-      })
+      });
       res.status(200).json({ success: true });
-    } catch (error) {
-
-    }
+    } catch (error) { }
   }
 
   async home(req: Request, res: Response, next: NextFunction) {
