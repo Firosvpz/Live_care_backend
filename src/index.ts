@@ -3,9 +3,10 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import user_router from "./infrastructure/routes/user_routes";
-import sp_router from "./infrastructure/routes/service_provider_routes"
+import sp_router from "./infrastructure/routes/service_provider_routes";
 import connectDB from "./infrastructure/config/mongodb";
 import { logger } from "./infrastructure/utils/combine_log";
+import admin_router from "./infrastructure/routes/admin_routes";
 
 dotenv.config();
 
@@ -35,8 +36,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use("/user", user_router);
-app.use("/sp",sp_router)
-
+app.use("/sp", sp_router);
+app.use("/admin",admin_router)
 app.listen(PORT, () => {
   logger.info(`server started on http://localhost:${PORT}`);
 });

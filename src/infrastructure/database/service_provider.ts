@@ -21,6 +21,10 @@ const Service_provider_schema: Schema<IService_provider> = new Schema(
       type: String,
       required: true,
     },
+    gender:{
+      type:String,
+      required:false
+    },
     service: {
       type: String,
     },
@@ -53,10 +57,10 @@ const Service_provider_schema: Schema<IService_provider> = new Schema(
       type: Boolean,
       default: false,
     },
-    hasCompletedDetails:{
-        type:Boolean,
-        default:false
-    }
+    hasCompletedDetails: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -65,9 +69,6 @@ const Service_provider_schema: Schema<IService_provider> = new Schema(
 
 // Create and export the model
 const service_provider: Model<IService_provider> =
-  mongoose.model<IService_provider>(
-    "serviceProvider",
-    Service_provider_schema,
-  );
+  mongoose.model<IService_provider>("serviceProvider", Service_provider_schema);
 
 export { service_provider };

@@ -1,6 +1,6 @@
- interface IGenerateOtp {
-  generateOtp(length?: number): string
+interface IGenerateOtp {
+  generateOtp(length?: number): string;
   setExpiration(expirationTime: number): void;
-  isOtpExpired(otp:string):boolean
+  isOtpExpired(otp: string): boolean;
 }
-export default IGenerateOtp
+export default IGenerateOtp;

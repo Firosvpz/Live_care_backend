@@ -4,9 +4,10 @@ interface IService_provider {
   email: string;
   password: string;
   phone_number: string;
+  gender?:string;
   service?: string;
   qualification: string;
-  specialization?: string;
+  specialization?: string;                                
   experience_crt?: string;
   profile_picture?: string;
   exp_year?: number;

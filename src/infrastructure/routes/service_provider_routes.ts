@@ -11,43 +11,56 @@ import MailService from "../../infrastructure/utils/mail_service";
 import ServiceProviderUsecase from "../../usecases/service_provider_usecase";
 const serviceProvider = express.Router();
 
+const otp = new GenerateOtp();
+const hash = new HashPassword();
+const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
+const mail = new MailService();
+const fileStorage = new FileStorageService();
 
-const otp=new GenerateOtp()
-const hash = new HashPassword()
-const jwt=new JwtToken(process.env.JWT_SECRET_KEY as string)
-const mail=new MailService()
-const fileStorage = new FileStorageService()
+const spRepository = new ServiceProviderRepository();
+const spUsecase = new ServiceProviderUsecase(
+  spRepository,
+  mail,
+  jwt,
+  hash,
+  otp,
+  fileStorage,
+);
+const spController = new ServiceProviderController(spUsecase);
 
+serviceProvider.post(
+  "/sp-register",
+  uploadStorage.single("experience_crt"),
+  (req, res, next) => {
+    spController.verifyServiceProviderEmail(req, res, next);
+  },
+);
 
-const spRepository = new ServiceProviderRepository()
-const spUsecase = new ServiceProviderUsecase(spRepository,mail,jwt,hash,otp,fileStorage)
-const spController = new ServiceProviderController(spUsecase)
+serviceProvider.post("/verify-sp-otp", (req, res, next) => {
+  spController.verifyOtp(req, res, next);
+});
 
+serviceProvider.post("/resend-sp-otp", (req, res, next) => {
+  spController.resendOtp(req, res, next);
+});
 
-serviceProvider.post("/sp-register",uploadStorage.single('experience_crt'),(req,res,next)=>{
-    spController.verifyServiceProviderEmail(req,res,next)
-})
+serviceProvider.post("/sp-login", (req, res, next) => {
+  spController.verifyLogin(req, res, next);
+});
 
-serviceProvider.post("/verify-sp-otp",(req,res,next)=>{
-    spController.verifyOtp(req,res,next)
-})
+serviceProvider.post(
+  "/verify-details",
+  serviceProviderAuth,
+  uploadStorage.fields([
+    { name: "profile_picture", maxCount: 1 },
+    { name: "experience_crt", maxCount: 1 },
+  ]),
+  (req, res, next) => {
+    spController.verifyDetails(req, res, next); 
+  },
+);
 
-serviceProvider.post("/resend-sp-otp",(req,res,next)=>{
-    spController.resendOtp(req,res,next)
-})
-
-serviceProvider.post("/sp-login",(req,res,next)=>{
-    spController.verifyLogin(req,res,next)
-})
-
-serviceProvider.post("/verify-details",serviceProviderAuth,uploadStorage.fields([
-    {name:"profile_picture",maxCount:1},
-    {name:"expirience_crt",maxCount:1}
-]),(req,res,next)=>{
-    spController.verifyDetails(req,res,next)
-})
-
-serviceProvider.get("/sp-home",(req,res,next)=>{
-    spController.home(req,res,next)
-})
-export default serviceProvider
+serviceProvider.get("/sp-home", (req, res, next) => {
+  spController.home(req, res, next);
+});
+export default serviceProvider;

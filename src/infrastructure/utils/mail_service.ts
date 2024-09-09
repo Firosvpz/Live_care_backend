@@ -1,26 +1,26 @@
-import nodemailer, { Transporter } from 'nodemailer';
-import IMailService from '../../interfaces/utils/IMail_service';
-import { logger } from './combine_log';
-import dotenv from 'dotenv'
+import nodemailer, { Transporter } from "nodemailer";
+import IMailService from "../../interfaces/utils/IMail_service";
+import { logger } from "./combine_log";
+import dotenv from "dotenv";
 
-dotenv.config()
+dotenv.config();
 
 class MailService implements IMailService {
-  private transporter: Transporter
+  private transporter: Transporter;
   constructor() {
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.Email,
-        pass: process.env.Email_Password
-      }
-    })
-    this.validate_config()
+        pass: process.env.Email_Password,
+      },
+    });
+    this.validate_config();
   }
 
   private validate_config() {
     if (!process.env.Email || !process.env.Email_Password) {
-      logger.error(`Email or Email password in env is not set`)
+      logger.error(`Email or Email password in env is not set`);
       throw new Error("Email configuration missing");
     }
   }
@@ -44,20 +44,20 @@ class MailService implements IMailService {
   </body>
   </html>
  `;
-  try {
-    const info = await this.transporter.sendMail({
-      from:process.env.Email,
-      to:email,
-      subject: "Live-care Verification Code ✔",
-      text: `Dear ${name},\n\nYour OTP is: ${otp}\n\nBest regards,\nLive-care`,
-      html: email_content,
-    })
-    logger.info(`Email sent successfully ${info.response}`);
-  } catch (error) {
-    logger.error(`Failed to send email: ${error}`);
-    throw new Error("Failed to send email.");
-  }
+    try {
+      const info = await this.transporter.sendMail({
+        from: process.env.Email,
+        to: email,
+        subject: "Live-care Verification Code ✔",
+        text: `Dear ${name},\n\nYour OTP is: ${otp}\n\nBest regards,\nLive-care`,
+        html: email_content,
+      });
+      logger.info(`Email sent successfully ${info.response}`);
+    } catch (error) {
+      logger.error(`Failed to send email: ${error}`);
+      throw new Error("Failed to send email.");
+    }
   }
 }
 
-export default MailService
+export default MailService;
