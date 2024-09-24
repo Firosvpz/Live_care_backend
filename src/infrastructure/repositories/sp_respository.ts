@@ -41,6 +41,27 @@ class ServiceProviderRepository implements IServiceProviderRepository {
     );
     return updatedServiceProvider;
   }
-}
 
+  async editProfile(interviewerId: string, details: IService_provider): Promise<void> {
+    const { name, phone_number, gender, service, exp_year, qualification } = details
+    await service_provider.findByIdAndUpdate(interviewerId, {
+      name,
+      phone_number,
+      gender,
+      service,
+      exp_year,
+      qualification
+    })
+  }
+
+  async updatePassword(
+    serviceProviderId: string,
+
+    password: string
+  ): Promise<void | null> {
+    await service_provider.findByIdAndUpdate(serviceProviderId, {
+      password: password,
+    });
+  }
+}
 export default ServiceProviderRepository;

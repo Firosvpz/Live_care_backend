@@ -42,4 +42,24 @@ router.get("/user-home", userAuth, (req, res, next) => {
 router.post("/logout", userAuth, (req, res, next) => {
   controller.logout(req, res, next);
 });
+
+router.get("/get-profile", userAuth, (req, res, next) => {
+  controller.getProfileDetails(req,res,next)
+})
+
+router.put("/edit-profile",userAuth,(req,res,next)=>{
+  controller.editProfile(req,res,next)
+})
+
+router.put("/edit-password",userAuth,(req,res,next)=>{
+  controller.editPassword(req,res,next)
+})
+
+router.get("/service-providers", userAuth, (req, res, next) =>
+  controller.getApprovedAndUnblockedProviders(req, res, next)
+);
+
+router.get("/sp-details/:id", userAuth, (req, res, next) =>
+  controller.getServiceProviderDetails(req, res, next)
+);
 export default router;

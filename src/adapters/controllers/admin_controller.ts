@@ -108,12 +108,10 @@ class AdminController {
           .status(200)
           .json({ success: true, message: "serviceProvider approved" });
       } else {
-        res
-          .status(400)
-          .json({
-            success: false,
-            message: "Failed to approve serviceProvider",
-          });
+        res.status(400).json({
+          success: false,
+          message: "Failed to approve serviceProvider",
+        });
       }
     } catch (error) {
       next(error);
@@ -129,6 +127,68 @@ class AdminController {
         res.status(200).json({
           success: true,
         });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async addCategory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { categoryName, subCategories } = req.body;
+      if (!categoryName.trim()) {
+        return res
+          .status(400)
+          .json({
+            success: false,
+            message: "Categories name should not be empty",
+          });
+      }
+      if (subCategories.length === 0) {
+        return res
+          .status(400)
+          .json({ success: false, message: "No Categories added" });
+      }
+
+      const categoryAdded = await this.admin_usecase.addCategory(
+        categoryName,
+        subCategories
+      );
+      if (categoryAdded?.success) {
+        return res.status(201).json(categoryAdded);
+      }
+      return res.status(400).json(categoryAdded);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async findAllCategories(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 3;
+      const { categorys, total } = await this.admin_usecase.findAllCategories(
+        page,
+        limit
+      );
+      return res.status(200).json({
+        success: true,
+        data: categorys,
+        total,
+        message: "categorys list fetched",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  
+  async unlistCategory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const unlistCategory = await this.admin_usecase.unlistCategory(id);
+      if (unlistCategory) {
+        return res.status(200).json({ success: true, data: unlistCategory });
       }
     } catch (error) {
       next(error);

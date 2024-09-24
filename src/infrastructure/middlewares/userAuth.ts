@@ -14,6 +14,7 @@ declare global {
 }
 
 const userAuth = async (req: Request, res: Response, next: NextFunction) => {
+  
   let token = req.cookies.userToken;
 
   if (!token) {
@@ -23,7 +24,7 @@ const userAuth = async (req: Request, res: Response, next: NextFunction) => {
   }
   try {
     const decodedToken = jwt.verifyJwtToken(token);
-    console.log("tokenauth", decodedToken);
+    // console.log("tokenauth", decodedToken);
 
     if (decodedToken && decodedToken.role !== "user") {
       return res

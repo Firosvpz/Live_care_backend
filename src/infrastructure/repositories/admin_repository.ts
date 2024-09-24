@@ -5,6 +5,8 @@ import IUser from "../../domain/entities/user";
 import users from "../../infrastructure/database/user_model";
 import IService_provider from "../../domain/entities/service_provider";
 import { service_provider } from "../../infrastructure/database/service_provider";
+import Category from '../../domain/entities/category';
+import { CategoryModel } from "../../infrastructure/database/categoryModel";
 
 class AdminRepository implements IAdminRepository {
   async findByEmail(email: string): Promise<IAdmin | null> {
@@ -72,7 +74,7 @@ class AdminRepository implements IAdminRepository {
       logger.error("sp not found", 404);
     }
     await service_provider.findByIdAndUpdate(
-      { id: id },
+       id,
       { is_approved: !sp?.is_approved },
     );
     return true;
@@ -85,6 +87,51 @@ class AdminRepository implements IAdminRepository {
       logger.error("service provider not found");
     }
     return spDetails;
+  }
+
+  async addCategory(
+    categoryName: string,
+    subCategories: string[]
+  ): Promise<boolean> {
+    const newCategory = new CategoryModel({
+      categoryName: categoryName,
+      subCategories: subCategories,
+    });
+    const savedCategory = await newCategory.save();
+    if (!savedCategory) {
+      throw new Error("Failed to add category in the database");
+    }
+    return true;
+  }
+
+  async findAllCategories(
+    page: number,
+    limit: number
+  ): Promise<{ categorys: Category[]; total: number }> {
+    const categoryList = await CategoryModel.find()
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const total = await CategoryModel.find().countDocuments();
+    if (!categoryList) {
+      throw new Error("Failed to fetch category from database");
+    }
+    return { categorys: categoryList, total };
+  }
+
+  async unlistCategory(categoryId: string): Promise<Category | null> {
+    const category = await CategoryModel.findById(categoryId);
+    if (!category) throw new Error("category not found");
+
+    const categoryUnlist = await CategoryModel.findByIdAndUpdate(
+      categoryId,
+      { isListed: !category.isListed },
+      { new: true }
+    );
+    if (!categoryUnlist) {
+      throw new Error("Failed to unlist category");
+    }
+    return categoryUnlist;
   }
 }
 

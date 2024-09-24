@@ -20,8 +20,10 @@ class UserController {
         });
       }
     } catch (error) {
-      console.error('Server error:', error); // Log server errors for debugging
-      res.status(500).json({ success: false, message: "An error occurred during login" });
+      console.error("Server error:", error); // Log server errors for debugging
+      res
+        .status(500)
+        .json({ success: false, message: "An error occurred during register" });
       next(error);
     }
   }
@@ -91,8 +93,10 @@ class UserController {
         // throw new Error(user.message);
       }
     } catch (error) {
-      console.error('Server error:', error); // Log server errors for debugging
-      res.status(500).json({ success: false, message: "An error occurred during login" });
+      console.error("Server error:", error); // Log server errors for debugging
+      res
+        .status(500)
+        .json({ success: false, message: "An error occurred during login" });
       next(error);
     }
   }
@@ -106,7 +110,9 @@ class UserController {
         expires: new Date(0),
       });
       res.status(200).json({ success: true });
-    } catch (error) { }
+    } catch (error) {
+      next(error);
+    }
   }
 
   async home(req: Request, res: Response, next: NextFunction) {
@@ -119,6 +125,87 @@ class UserController {
       next(error);
     }
   }
+
+  async getProfileDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.userId
+      if (!userId) {
+        throw new Error("User Not Fount")
+      }
+
+      const user = await this.user_usecase.getProfileDetails(userId)
+      
+      return res.status(200).json({ success: true, data: user })
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async editProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { name, phone_number } = req.body
+      const userId = req.userId
+      if (!userId) {
+        throw new Error("User id not found")
+      }
+      await this.user_usecase.editProfile(userId, name, phone_number)
+      return res.status(200).json({ success: true, message: "Profile updated successfully" })
+
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async editPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.userId;
+      const { currentPassword, newPassword } = req.body;
+      if (!userId){
+         throw new Error("user id not found");
+      }
+      await this.user_usecase.editPassword(userId, currentPassword, newPassword)
+      return res.status(200).json({
+        success:true,
+        message:"Password changed successfully"
+      })
+    } catch (error) {
+       next(error)
+    }
+  }
+
+  async getApprovedAndUnblockedProviders(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const providers = await this.user_usecase.getApprovedAndUnblockedProviders();
+      res.json(providers);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getServiceProviderDetails(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { id } = req.params;
+      const serviceProvidersDetails =
+        await this.user_usecase.ServiceProviderDetails(id);
+      return res.status(200).json({
+        success: true,
+        data: serviceProvidersDetails,
+        message: "ServiceProviders details fetched",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+
+
 
 export default UserController;

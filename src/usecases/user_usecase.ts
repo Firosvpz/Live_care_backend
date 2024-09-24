@@ -1,10 +1,11 @@
-import IUserRepository from "../interfaces/repositories/IUser_repository";
+import IUserRepository from '../interfaces/repositories/IUser_repository';
 import IGenerateOtp from "../interfaces/utils/IGenerate_otp";
 import IHashPassword from "../interfaces/utils/IHash_password";
 import IJwtToken from "../interfaces/utils/IJwt_token";
 import IMailService from "../interfaces/utils/IMail_service";
 import IUser from "../domain/entities/user";
 import { logger } from "../infrastructure/utils/combine_log";
+import IService_provider from '../domain/entities/service_provider';
 
 // type DecodedToken = {
 //   info: { userId: string };
@@ -85,7 +86,7 @@ class UserUsecase {
     try {
       const user = await this.userRepository.findUserByEmail(email);
       if (!user) {
-        logger.error("User not found",404);
+        logger.error("User not found", 404);
         return {
           success: false,
           message: "User not found",
@@ -126,6 +127,39 @@ class UserUsecase {
       };
     }
   }
+
+  async getProfileDetails(userId: string) {
+     const user = await this.userRepository.findUserById(userId)
+     return user;
+  }
+
+  async editProfile(userId:string,name:string,phone_number:string) {
+     await this.userRepository.editProfile(userId,name,phone_number)
+  }
+
+  async editPassword(userId:string,oldPassword:string,newPassword:string) {
+    const user = await this.userRepository.findUserById(userId)
+    if(!user){
+      throw new Error("User not found")
+    }
+    const isPasswordMatch = await this.hashPassword.compare(oldPassword,user?.password)
+    if(!isPasswordMatch){
+      throw new Error("Current password is incorrect. Please check and try again")
+    }
+    const hashedPassword = await this.hashPassword.hash(newPassword)
+    await this.userRepository.updatePassword(userId,hashedPassword)
+  }
+
+  async getApprovedAndUnblockedProviders(): Promise<IService_provider[]> {
+    return this.userRepository.getApprovedAndUnblockedProviders();
+  }
+
+  async ServiceProviderDetails(id: string) {
+    const serviceProviderDetails =
+      await this.userRepository.getServiceProviderDetails(id);
+    return serviceProviderDetails;
+  }
+
 }
 
 export default UserUsecase;

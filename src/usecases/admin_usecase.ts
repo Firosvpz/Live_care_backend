@@ -14,12 +14,15 @@ class AdminUsecase {
 
     if (!adminEmail || !adminPassword) {
       logger.error("can not set env variables");
+      throw new Error("");
     }
     if (email !== adminEmail) {
       logger.error("Invalid email");
+      throw new Error("");
     }
     if (password !== adminPassword) {
       logger.error("Invalid password");
+      throw new Error("");
     }
     const token = this.jwtToken.createJwtToken("adminIdPlaceholder", "admin");
     return {
@@ -64,6 +67,30 @@ class AdminUsecase {
   async approveServiceProvider(sp_id: string) {
     const sp = await this.adminRepository.approveServiceProvider(sp_id);
     return sp;
+  }
+
+  async addCategory(categoryName: string, subCategories: string[]) {
+     const addedCategory = await this.adminRepository.addCategory(categoryName,subCategories)
+     if (addedCategory) {
+      return { success: true, message: "Category added successfully" };
+    }else{
+      throw new Error("Failed to add Category");
+    }
+  }
+
+  async findAllCategories(page: number, limit: number) {
+    const { categorys, total } = await this.adminRepository.findAllCategories(
+      page,
+      limit
+    );
+    return { categorys, total };
+  }
+
+  async unlistCategory(categoryId: string) {
+    const categoryUnlist = await this.adminRepository.unlistCategory(
+      categoryId
+    );
+    return categoryUnlist;
   }
 }
 

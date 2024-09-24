@@ -63,4 +63,21 @@ serviceProvider.post(
 serviceProvider.get("/sp-home", serviceProviderAuth, (req, res, next) => {
   spController.home(req, res, next);
 });
+
+serviceProvider.get("/categories",(req,res,next)=>{
+  spController.getCategories(req,res,next)
+})
+
+serviceProvider.get("/sp-profile",serviceProviderAuth,(req,res,next)=>{
+  spController.getProfileDetails(req,res,next)
+})
+
+serviceProvider.put("/edit-profile",serviceProviderAuth,(req,res,next)=>{
+  spController.editProfile(req,res,next)
+})
+
+serviceProvider.put("/edit-password",serviceProviderAuth,(req,res,next)=>{
+  spController.editPassword(req,res,next)
+})
+
 export default serviceProvider;

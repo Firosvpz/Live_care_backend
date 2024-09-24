@@ -16,7 +16,6 @@ class ServiceProviderController {
       const spInfo = req.body;
 
       const response = await this.spUsecase.findServiceProvider(spInfo);
-      
 
       if (!response) {
         logger.error("cannot get service provider info");
@@ -36,6 +35,10 @@ class ServiceProviderController {
         });
       }
     } catch (error) {
+      console.error("Server error:", error); // Log server errors for debugging
+      res
+        .status(500)
+        .json({ success: false, message: "An error occurred during register" });
       next(error);
     }
   }
@@ -115,8 +118,10 @@ class ServiceProviderController {
         res.status(400).json(serviceProvider);
       }
     } catch (error) {
-        console.error('Server error:', error); // Log server errors for debugging
-        res.status(500).json({ success: false, message: "An error occurred during login" });
+      console.error("Server error:", error); // Log server errors for debugging
+      res
+        .status(500)
+        .json({ success: false, message: "An error occurred during login" });
       next(error);
     }
   }
@@ -203,6 +208,57 @@ class ServiceProviderController {
       next(error);
     }
   }
+
+  async getCategories(req: Request, res: Response, next: NextFunction){
+    try {
+      const categories = await this.spUsecase.getAllCategories();
+      return res.status(200).json(categories);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getProfileDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const serviceProviderId = req.serviceProviderId;
+      if (!serviceProviderId) throw new Error("userId id not found");
+      const user = await this.spUsecase.getProfileDetails(
+        serviceProviderId
+      );
+      return res.status(200).json({ success: true, data: user });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async editProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      console.log(req.body)
+      const {details} = req.body;
+      const serviceProviderId = req.serviceProviderId;
+      if(!serviceProviderId) throw new Error("Interviewer id not found");
+      if (!details) throw new Error("Details not provided");
+
+      await this.spUsecase.editProfile(serviceProviderId, details)
+      return res.status(200).json({success: true, message: "Profile updated successfully"})
+
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async editPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const serviceProviderId = req.serviceProviderId;
+      const {currentPassword, newPassword} = req.body
+      if(!serviceProviderId) throw new Error("interviewer id not found");
+      await this.spUsecase.editPassword(serviceProviderId, currentPassword,  newPassword)
+      return res.status(200).send({success: true, message: "Password changed successfully"})
+    } catch (error) {
+      next(error)
+    }
+  }
+
 }
 
 export default ServiceProviderController;

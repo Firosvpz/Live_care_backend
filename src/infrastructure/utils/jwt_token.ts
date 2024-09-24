@@ -16,7 +16,7 @@ class JwtToken implements IJwtToken {
   verifyJwtToken(token: string): jwt.JwtPayload | null {
     try {
       const decodedToken = jwt.verify(token, this.secret_key) as JwtPayload;
-      logger.info("verfied jwt token");
+      // logger.info("verfied jwt token");
       return decodedToken;
     } catch (error) {
       logger.error("error occured in verify jwt token");
