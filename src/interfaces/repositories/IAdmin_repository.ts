@@ -1,7 +1,7 @@
 import { IAdmin } from "../../domain/entities/admin";
 import IUser from "../../domain/entities/user";
 import IService_provider from "../../domain/entities/service_provider";
-import Category from '../../domain/entities/category';
+import Category from "../../domain/entities/category";
 interface IAdminRepository {
   findByEmail(email: string): Promise<IAdmin | null>;
   findAllUsers(
@@ -19,7 +19,7 @@ interface IAdminRepository {
   addCategory(categoryName: string, subCategories: string[]): Promise<boolean>;
   findAllCategories(
     page: number,
-    limit: number
+    limit: number,
   ): Promise<{ categorys: Category[]; total: number }>;
   unlistCategory(id: string): Promise<Category | null>;
 }

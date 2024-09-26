@@ -1,5 +1,5 @@
 import mongoose, { Model, Schema } from "mongoose";
-import Category from '../../domain/entities/category';
+import Category from "../../domain/entities/category";
 const categorySchema: Schema<Category> = new Schema({
   categoryName: {
     type: String,
@@ -17,7 +17,7 @@ const categorySchema: Schema<Category> = new Schema({
 
 const CategoryModel: Model<Category> = mongoose.model(
   "Category",
-  categorySchema
+  categorySchema,
 );
 
 export { CategoryModel };

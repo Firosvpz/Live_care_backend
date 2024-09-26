@@ -9,8 +9,14 @@ interface IServiceProviderRepository {
   saveServiceProviderDetails(
     ServiceProviderDetails: IService_provider,
   ): Promise<IService_provider | null>;
-  editProfile(serviceProviderId: string, details: IService_provider): Promise<void>
-  updatePassword(serviceProviderId: string, password: string): Promise<void | null>
+  editProfile(
+    serviceProviderId: string,
+    details: IService_provider,
+  ): Promise<void>;
+  updatePassword(
+    serviceProviderId: string,
+    password: string,
+  ): Promise<void | null>;
 }
 
 export default IServiceProviderRepository;

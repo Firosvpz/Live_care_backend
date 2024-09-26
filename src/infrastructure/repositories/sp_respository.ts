@@ -42,22 +42,26 @@ class ServiceProviderRepository implements IServiceProviderRepository {
     return updatedServiceProvider;
   }
 
-  async editProfile(interviewerId: string, details: IService_provider): Promise<void> {
-    const { name, phone_number, gender, service, exp_year, qualification } = details
+  async editProfile(
+    interviewerId: string,
+    details: IService_provider,
+  ): Promise<void> {
+    const { name, phone_number, gender, service, exp_year, qualification } =
+      details;
     await service_provider.findByIdAndUpdate(interviewerId, {
       name,
       phone_number,
       gender,
       service,
       exp_year,
-      qualification
-    })
+      qualification,
+    });
   }
 
   async updatePassword(
     serviceProviderId: string,
 
-    password: string
+    password: string,
   ): Promise<void | null> {
     await service_provider.findByIdAndUpdate(serviceProviderId, {
       password: password,

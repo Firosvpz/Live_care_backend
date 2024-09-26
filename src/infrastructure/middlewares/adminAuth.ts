@@ -12,7 +12,6 @@ declare global {
 }
 
 const adminAuth = async (req: Request, res: Response, next: NextFunction) => {
-  
   let token = req.cookies.adminToken;
 
   if (!token) {
@@ -31,7 +30,7 @@ const adminAuth = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     if (decodedToken && decodedToken.id) {
-      req.adminId = decodedToken.id
+      req.adminId = decodedToken.id;
       next();
     } else {
       return res

@@ -1,4 +1,4 @@
-import IServiceProviderRepository from '../interfaces/repositories/ISp_repository';
+import IServiceProviderRepository from "../interfaces/repositories/ISp_repository";
 import IMailService from "../interfaces/utils/IMail_service";
 import IJwtToken from "../interfaces/utils/IJwt_token";
 import IGenerateOtp from "../interfaces/utils/IGenerate_otp";
@@ -172,30 +172,39 @@ class ServiceProviderUsecase {
   }
 
   async getAllCategories(): Promise<string[]> {
-    const categories = await CategoryModel.find({isListed:true}).select("categoryName")
-    return categories.map((category)=>category.categoryName)
+    const categories = await CategoryModel.find({ isListed: true }).select(
+      "categoryName",
+    );
+    return categories.map((category) => category.categoryName);
   }
 
   async getProfileDetails(userId: string) {
-    const user = await this.spRepository.findById(
-      userId
-    );
+    const user = await this.spRepository.findById(userId);
     return user;
   }
 
   async editProfile(serviceProviderId: string, details: IService_provider) {
-    await this.spRepository.editProfile(serviceProviderId, details)
+    await this.spRepository.editProfile(serviceProviderId, details);
   }
-  
-  async editPassword(serviceProviderId: string, oldPassword: string,  newPassword: string) {
-    
+
+  async editPassword(
+    serviceProviderId: string,
+    oldPassword: string,
+    newPassword: string,
+  ) {
     const serviceProvider = await this.spRepository.findById(serviceProviderId);
-    if(!serviceProvider) throw new Error("Interviewer not found ")
-    const isPasswordMatch = await this.hashPassword.compare(oldPassword, serviceProvider?.password)
-    if(!isPasswordMatch) throw new Error("Current password is incorrect. Please check and try again.")
-    
-    const hashedPassword = await this.hashPassword.hash(newPassword)
-    await this.spRepository.updatePassword(serviceProviderId, hashedPassword)
+    if (!serviceProvider) throw new Error("Interviewer not found ");
+    const isPasswordMatch = await this.hashPassword.compare(
+      oldPassword,
+      serviceProvider?.password,
+    );
+    if (!isPasswordMatch)
+      throw new Error(
+        "Current password is incorrect. Please check and try again.",
+      );
+
+    const hashedPassword = await this.hashPassword.hash(newPassword);
+    await this.spRepository.updatePassword(serviceProviderId, hashedPassword);
   }
 }
 

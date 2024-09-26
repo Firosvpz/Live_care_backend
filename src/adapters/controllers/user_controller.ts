@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
 
 class UserController {
-  constructor(private user_usecase: UserUsecase) { }
+  constructor(private user_usecase: UserUsecase) {}
   async verifyUserEmail(req: Request, res: Response, next: NextFunction) {
     try {
       const userInfo = req.body;
@@ -128,31 +128,32 @@ class UserController {
 
   async getProfileDetails(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.userId
+      const userId = req.userId;
       if (!userId) {
-        throw new Error("User Not Fount")
+        throw new Error("User Not Fount");
       }
 
-      const user = await this.user_usecase.getProfileDetails(userId)
-      
-      return res.status(200).json({ success: true, data: user })
+      const user = await this.user_usecase.getProfileDetails(userId);
+
+      return res.status(200).json({ success: true, data: user });
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
   async editProfile(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, phone_number } = req.body
-      const userId = req.userId
+      const { name, phone_number } = req.body;
+      const userId = req.userId;
       if (!userId) {
-        throw new Error("User id not found")
+        throw new Error("User id not found");
       }
-      await this.user_usecase.editProfile(userId, name, phone_number)
-      return res.status(200).json({ success: true, message: "Profile updated successfully" })
-
+      await this.user_usecase.editProfile(userId, name, phone_number);
+      return res
+        .status(200)
+        .json({ success: true, message: "Profile updated successfully" });
     } catch (error) {
-      next(error)
+      next(error);
     }
   }
 
@@ -160,26 +161,31 @@ class UserController {
     try {
       const userId = req.userId;
       const { currentPassword, newPassword } = req.body;
-      if (!userId){
-         throw new Error("user id not found");
+      if (!userId) {
+        throw new Error("user id not found");
       }
-      await this.user_usecase.editPassword(userId, currentPassword, newPassword)
+      await this.user_usecase.editPassword(
+        userId,
+        currentPassword,
+        newPassword,
+      );
       return res.status(200).json({
-        success:true,
-        message:"Password changed successfully"
-      })
+        success: true,
+        message: "Password changed successfully",
+      });
     } catch (error) {
-       next(error)
+      next(error);
     }
   }
 
   async getApprovedAndUnblockedProviders(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
-      const providers = await this.user_usecase.getApprovedAndUnblockedProviders();
+      const providers =
+        await this.user_usecase.getApprovedAndUnblockedProviders();
       res.json(providers);
     } catch (error) {
       next(error);
@@ -189,7 +195,7 @@ class UserController {
   async getServiceProviderDetails(
     req: Request,
     res: Response,
-    next: NextFunction
+    next: NextFunction,
   ) {
     try {
       const { id } = req.params;
@@ -205,7 +211,5 @@ class UserController {
     }
   }
 }
-
-
 
 export default UserController;

@@ -5,7 +5,7 @@ import IUser from "../../domain/entities/user";
 import users from "../../infrastructure/database/user_model";
 import IService_provider from "../../domain/entities/service_provider";
 import { service_provider } from "../../infrastructure/database/service_provider";
-import Category from '../../domain/entities/category';
+import Category from "../../domain/entities/category";
 import { CategoryModel } from "../../infrastructure/database/categoryModel";
 
 class AdminRepository implements IAdminRepository {
@@ -73,10 +73,9 @@ class AdminRepository implements IAdminRepository {
     if (!sp) {
       logger.error("sp not found", 404);
     }
-    await service_provider.findByIdAndUpdate(
-       id,
-      { is_approved: !sp?.is_approved },
-    );
+    await service_provider.findByIdAndUpdate(id, {
+      is_approved: !sp?.is_approved,
+    });
     return true;
   }
   async getServiceProviderDetails(
@@ -91,7 +90,7 @@ class AdminRepository implements IAdminRepository {
 
   async addCategory(
     categoryName: string,
-    subCategories: string[]
+    subCategories: string[],
   ): Promise<boolean> {
     const newCategory = new CategoryModel({
       categoryName: categoryName,
@@ -106,7 +105,7 @@ class AdminRepository implements IAdminRepository {
 
   async findAllCategories(
     page: number,
-    limit: number
+    limit: number,
   ): Promise<{ categorys: Category[]; total: number }> {
     const categoryList = await CategoryModel.find()
       .sort({ createdAt: -1 })
@@ -126,7 +125,7 @@ class AdminRepository implements IAdminRepository {
     const categoryUnlist = await CategoryModel.findByIdAndUpdate(
       categoryId,
       { isListed: !category.isListed },
-      { new: true }
+      { new: true },
     );
     if (!categoryUnlist) {
       throw new Error("Failed to unlist category");

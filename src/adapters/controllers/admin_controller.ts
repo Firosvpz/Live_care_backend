@@ -137,12 +137,10 @@ class AdminController {
     try {
       const { categoryName, subCategories } = req.body;
       if (!categoryName.trim()) {
-        return res
-          .status(400)
-          .json({
-            success: false,
-            message: "Categories name should not be empty",
-          });
+        return res.status(400).json({
+          success: false,
+          message: "Categories name should not be empty",
+        });
       }
       if (subCategories.length === 0) {
         return res
@@ -152,7 +150,7 @@ class AdminController {
 
       const categoryAdded = await this.admin_usecase.addCategory(
         categoryName,
-        subCategories
+        subCategories,
       );
       if (categoryAdded?.success) {
         return res.status(201).json(categoryAdded);
@@ -169,7 +167,7 @@ class AdminController {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 3;
       const { categorys, total } = await this.admin_usecase.findAllCategories(
         page,
-        limit
+        limit,
       );
       return res.status(200).json({
         success: true,
@@ -182,7 +180,6 @@ class AdminController {
     }
   }
 
-  
   async unlistCategory(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;

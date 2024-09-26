@@ -14,7 +14,6 @@ declare global {
 }
 
 const userAuth = async (req: Request, res: Response, next: NextFunction) => {
-  
   let token = req.cookies.userToken;
 
   if (!token) {

@@ -70,10 +70,13 @@ class AdminUsecase {
   }
 
   async addCategory(categoryName: string, subCategories: string[]) {
-     const addedCategory = await this.adminRepository.addCategory(categoryName,subCategories)
-     if (addedCategory) {
+    const addedCategory = await this.adminRepository.addCategory(
+      categoryName,
+      subCategories,
+    );
+    if (addedCategory) {
       return { success: true, message: "Category added successfully" };
-    }else{
+    } else {
       throw new Error("Failed to add Category");
     }
   }
@@ -81,15 +84,14 @@ class AdminUsecase {
   async findAllCategories(page: number, limit: number) {
     const { categorys, total } = await this.adminRepository.findAllCategories(
       page,
-      limit
+      limit,
     );
     return { categorys, total };
   }
 
   async unlistCategory(categoryId: string) {
-    const categoryUnlist = await this.adminRepository.unlistCategory(
-      categoryId
-    );
+    const categoryUnlist =
+      await this.adminRepository.unlistCategory(categoryId);
     return categoryUnlist;
   }
 }
