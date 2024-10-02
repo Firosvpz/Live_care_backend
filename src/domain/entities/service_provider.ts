@@ -13,7 +13,7 @@ interface IService_provider {
   exp_year?: number;
   rate?: number;
   address?: string;
-  is_approved: boolean;
+  is_approved: "Approved" | "Pending" | "Rejected";
   is_blocked: boolean;
   hasCompletedDetails: boolean;
 }

@@ -7,6 +7,8 @@ import JwtToken from "../../infrastructure/utils/jwt_token";
 import MailService from "../../infrastructure/utils/mail_service";
 import UserUsecase from "../../usecases/user_usecase";
 import userAuth from "../../infrastructure/middlewares/userAuth";
+import FileStorageService from "../../infrastructure/utils/File_storage";
+import { uploadStorage } from "../../infrastructure/middlewares/multer";
 
 const router = express.Router();
 
@@ -15,8 +17,16 @@ const otp = new GenerateOtp();
 const hash = new HashPassword();
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
 const mail = new MailService();
+const fileStorage = new FileStorageService();
 
-const userCase = new UserUsecase(userRepository, otp, hash, jwt, mail);
+const userCase = new UserUsecase(
+  userRepository,
+  otp,
+  hash,
+  jwt,
+  mail,
+  fileStorage,
+);
 const controller = new UserController(userCase);
 
 router.post("/user-register", (req, res, next) => {
@@ -34,6 +44,15 @@ router.post("/resend-otp", (req, res, next) => {
 router.post("/user-login", (req, res, next) => {
   controller.verifyLogin(req, res, next);
 });
+
+router.post(
+  "/verify-userdetails",
+  userAuth,
+  uploadStorage.fields([{ name: "profile_picture", maxCount: 1 }]),
+  (req, res, next) => {
+    controller.verifyDetails(req, res, next);
+  },
+);
 
 router.get("/user-home", userAuth, (req, res, next) => {
   controller.home(req, res, next);
@@ -61,5 +80,17 @@ router.get("/service-providers", userAuth, (req, res, next) =>
 
 router.get("/sp-details/:id", userAuth, (req, res, next) =>
   controller.getServiceProviderDetails(req, res, next),
+);
+
+router.get("/blogs", userAuth, (req, res, next) =>
+  controller.getBlogs(req, res, next),
+);
+
+router.get("/slot-details/:serviceProviderId", (req, res, next) =>
+  controller.getProviderSlotsDetails(req, res, next),
+);
+
+router.get("/get-bookings", userAuth, (req, res, next) =>
+  controller.getScheduledBookingList(req, res, next),
 );
 export default router;

@@ -13,14 +13,22 @@ class JwtToken implements IJwtToken {
     logger.info("jwt token created");
     return token;
   }
-  verifyJwtToken(token: string): jwt.JwtPayload | null {
+
+  verifyJwtToken(token: string): JwtPayload | null {
     try {
+      // console.log('Attempting to verify token:', token, 'with secret key:', this.secret_key);
+
       const decodedToken = jwt.verify(token, this.secret_key) as JwtPayload;
-      // logger.info("verfied jwt token");
+      // console.log('Token successfully verified:', decodedToken);
+
       return decodedToken;
-    } catch (error) {
-      logger.error("error occured in verify jwt token");
-      throw new Error("");
+    } catch (error: any) {
+      // Log the detailed error message for better debugging
+      console.error("Error occurred in verifyJwtToken:", error.message);
+      logger.error(`Error verifying JWT token: ${error.message}`);
+
+      // Optionally, you can rethrow a more descriptive error based on the cause
+      throw new Error(`Failed to verify JWT token: ${error.message}`);
     }
   }
   otpToken(info: jwt.JwtPayload, otp: string): string {

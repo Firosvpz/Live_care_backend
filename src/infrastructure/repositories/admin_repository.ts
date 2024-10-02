@@ -7,6 +7,10 @@ import IService_provider from "../../domain/entities/service_provider";
 import { service_provider } from "../../infrastructure/database/service_provider";
 import Category from "../../domain/entities/category";
 import { CategoryModel } from "../../infrastructure/database/categoryModel";
+import { IBlog } from "../../domain/entities/blogs";
+import { BlogModel } from "../../infrastructure/database/blogsModel";
+import { ScheduledBookingModel } from "../../infrastructure/database/bookingModel";
+import ScheduledBooking from "../../domain/entities/booking";
 
 class AdminRepository implements IAdminRepository {
   async findByEmail(email: string): Promise<IAdmin | null> {
@@ -71,13 +75,33 @@ class AdminRepository implements IAdminRepository {
   async approveServiceProvider(id: string): Promise<boolean> {
     const sp = await service_provider.findById(id);
     if (!sp) {
-      logger.error("sp not found", 404);
+      logger.error("Service provider not found", 404);
+      return false;
     }
+
     await service_provider.findByIdAndUpdate(id, {
-      is_approved: !sp?.is_approved,
+      is_approved: "Approved",
     });
+
+    logger.info(`Service provider with ID: ${id} has been approved.`);
     return true;
   }
+
+  async rejectServiceProvider(id: string): Promise<boolean> {
+    const sp = await service_provider.findById(id);
+    if (!sp) {
+      logger.error("Service provider not found", 404);
+      return false;
+    }
+
+    await service_provider.findByIdAndUpdate(id, {
+      is_approved: "Rejected",
+    });
+
+    logger.info(`Service provider with ID: ${id} has been rejected.`);
+    return true;
+  }
+
   async getServiceProviderDetails(
     id: string,
   ): Promise<IService_provider | null> {
@@ -131,6 +155,122 @@ class AdminRepository implements IAdminRepository {
       throw new Error("Failed to unlist category");
     }
     return categoryUnlist;
+  }
+
+  async addBlog(blogData: Partial<IBlog>): Promise<IBlog> {
+    const blog = new BlogModel(blogData);
+    console.log("blog", blog);
+
+    await blog.save();
+    return blog;
+  }
+
+  async listBlogs(
+    page: number,
+    limit: number,
+  ): Promise<{ blogs: IBlog[]; total: number }> {
+    const blogs = await BlogModel.find({})
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+    const total = await BlogModel.countDocuments({});
+    return { blogs, total };
+  }
+
+  async unlistBlog(blogId: string) {
+    if (!blogId) {
+      throw new Error("Blog ID is required");
+    }
+
+    const blog = await BlogModel.findById(blogId);
+    if (!blog) {
+      throw new Error("Blog not found");
+    }
+
+    blog.isListed = false;
+    return await blog.save();
+  }
+
+  async updateBlogStatus(blogId: string, isListed: boolean): Promise<IBlog> {
+    try {
+      const updatedBlog = await BlogModel.findByIdAndUpdate(
+        blogId,
+        { isListed },
+        { new: true },
+      ).exec();
+      if (!updatedBlog) {
+        throw new Error("Blog not found");
+      }
+      return updatedBlog;
+    } catch (error) {
+      throw new Error(`Error updating blog status: `);
+    }
+  }
+
+  async getAllBookings(
+    page: number,
+    limit: number,
+  ): Promise<ScheduledBooking[]> {
+    try {
+      const skip = (page - 1) * limit;
+      const bookings = await ScheduledBookingModel.find()
+        .populate({
+          path: "serviceProviderId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name",
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec();
+
+      return bookings;
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      throw new Error("Failed to fetch bookings");
+    }
+  }
+
+  async dashboardDetails(): Promise<any> {
+    const providersCount = await service_provider.countDocuments();
+    const usersCount = await users.countDocuments();
+
+    const bookings = await ScheduledBookingModel.aggregate([
+      {
+        $group: { _id: "$status", total: { $sum: 1 } },
+      },
+    ]);
+
+    const bookingsCount = {
+      completed: 0,
+      scheduled: 0,
+      cancelled: 0,
+      refunded: 0,
+    };
+
+    bookings.forEach((int) => {
+      if (int._id === "Completed") {
+        bookingsCount.completed = int.total;
+      } else if (int._id === "Scheduled") {
+        bookingsCount.scheduled = int.total;
+      } else if (int._id === "Cancelled") {
+        bookingsCount.cancelled = int.total;
+      } else if (int._id === "Refunded") {
+        bookingsCount.refunded = int.total;
+      }
+    });
+
+    const scheduledBookings = await ScheduledBookingModel.find();
+
+    return {
+      providersCount,
+      usersCount,
+      bookingsCount,
+      scheduledBookings,
+    };
   }
 }
 

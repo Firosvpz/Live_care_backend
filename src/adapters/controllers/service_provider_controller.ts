@@ -3,9 +3,19 @@ import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
 import path from "path";
 import fs from "fs";
+import ProviderSlot from "../../domain/entities/slot";
+import MailService from "../../infrastructure/utils/mail_service";
+// import { ProviderSlotModel } from "infrastructure/database/slotModel";
+
+interface Service {
+  value: string;
+  label: string;
+}
 
 class ServiceProviderController {
-  constructor(private spUsecase: ServiceProviderUsecase) {}
+  constructor(private spUsecase: ServiceProviderUsecase) {
+    this.emergencycancelBooking = this.emergencycancelBooking.bind(this);
+  }
 
   async verifyServiceProviderEmail(
     req: Request,
@@ -261,6 +271,176 @@ class ServiceProviderController {
         .send({ success: true, message: "Password changed successfully" });
     } catch (error) {
       next(error);
+    }
+  }
+
+  async addProviderSlot(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { date, description, timeFrom, timeTo, title, price, services } =
+        req.body.slotData;
+      const Srvc: string[] = (services as Service[]).map(
+        (option: Service) => option.value,
+      );
+      const serviceProviderId = req.serviceProviderId;
+
+      if (!serviceProviderId) {
+        throw new Error("Unauthorized user");
+      }
+
+      const slotData: ProviderSlot = {
+        serviceProviderId,
+        slots: [
+          {
+            date: new Date(date),
+            schedule: [
+              {
+                description,
+                from: timeFrom,
+                to: timeTo,
+                title,
+                status: "open",
+                price,
+                services: Srvc,
+              },
+            ],
+          },
+        ],
+      };
+
+      const slotAdded = await this.spUsecase.addSlot(slotData);
+      return res.status(201).json({
+        success: true,
+        data: slotAdded,
+        message: "Slot added successfully",
+      });
+    } catch (error: any) {
+      console.error("Error adding slot:", error);
+    }
+  }
+
+  async getProviderSlots(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const searchQuery = req.query.searchQuery
+        ? (req.query.searchQuery as string)
+        : "";
+      const serviceProviderId = req.serviceProviderId;
+      if (!serviceProviderId) {
+        throw new Error("Unauthorized user");
+      }
+
+      const { slots, total } = await this.spUsecase.getProviderSlots(
+        serviceProviderId,
+        page,
+        limit,
+        searchQuery,
+      );
+      return res.status(200).json({
+        success: true,
+        data: slots,
+        total,
+        message: "Fetched booking slots list",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getDomains(req: Request, res: Response, next: NextFunction) {
+    try {
+      const domainsList = await this.spUsecase.getDomains();
+      return res.status(200).json({
+        success: true,
+        data: domainsList,
+        message: "Fetched domains list",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async editSlot(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { slotId } = req.params;
+      const updatedSlotData = req.body;
+      console.log("updatedslot", updatedSlotData);
+
+      const result = await this.spUsecase.editSlot(slotId, updatedSlotData);
+      res
+        .status(200)
+        .json({ message: "Slot updated successfully", updatedSlot: result });
+    } catch (error) {
+      console.error("Error updating slot:", error);
+      next(error);
+    }
+  }
+
+  async getScheduledBookings(req: Request, res: Response, next: NextFunction) {
+    try {
+      const serviceProviderId = req.serviceProviderId;
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+
+      if (!serviceProviderId) throw new Error("Provider not found");
+      const { bookings, total } = await this.spUsecase.getScheduledBookings(
+        serviceProviderId,
+        page,
+        limit,
+      );
+      return res.status(200).json({ success: true, data: bookings, total });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateBookingStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { bookingId } = req.params;
+      const { status } = req.body;
+      console.log("Request:", bookingId, status);
+      const updatedBooking = await this.spUsecase.updateBookingStatus(
+        bookingId,
+        status,
+      );
+      if (!updatedBooking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+      res.status(200).json(updatedBooking);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      res
+        .status(500)
+        .json({ message: "Failed to update booking status", error });
+    }
+  }
+
+  async emergencycancelBooking(req: Request, res: Response) {
+    try {
+      const { bookingId } = req.params;
+      const { cancelReason } = req.body;
+
+      console.log("bbbbb", bookingId, cancelReason);
+      console.log("About to call cancelBookingUseCase");
+
+      const result = await this.spUsecase.cancelBookingUseCase(
+        bookingId,
+        cancelReason,
+      );
+
+      const mailService = new MailService();
+      await mailService.sendLeaveMail(
+        result.user.name,
+        result.user.email,
+        cancelReason,
+      );
+
+      return res
+        .status(200)
+        .json({ message: "Booking canceled successfully", result });
+    } catch (error) {
+      console.log("Error in EmergencycancelBooking:", error);
+      return res.status(500).json({ message: "Cancellation failed", error });
     }
   }
 }

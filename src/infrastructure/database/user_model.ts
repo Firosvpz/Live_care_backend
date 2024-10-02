@@ -28,6 +28,10 @@ const userSchema: Schema<IUser> = new Schema(
       type: String,
       required: false,
     },
+    gender: {
+      type: String,
+      required: false,
+    },
     is_blocked: {
       type: Boolean,
       required: true,
@@ -52,6 +56,14 @@ const userSchema: Schema<IUser> = new Schema(
     profile_picture: {
       type: String,
       required: false,
+    },
+    blood_type: {
+      type: String,
+      required: false,
+    },
+    hasCompletedDetails: {
+      type: Boolean,
+      default: false,
     },
   },
   {

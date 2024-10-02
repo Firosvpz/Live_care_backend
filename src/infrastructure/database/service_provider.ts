@@ -50,8 +50,9 @@ const Service_provider_schema: Schema<IService_provider> = new Schema(
       type: String,
     },
     is_approved: {
-      type: Boolean,
-      default: false,
+      type: String,
+      enum: ["Approved", "Pending", "Rejected"],
+      default: "Pending",
     },
     is_blocked: {
       type: Boolean,

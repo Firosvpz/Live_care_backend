@@ -1,6 +1,8 @@
 import UserUsecase from "../../usecases/user_usecase";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
+import path from "path";
+import fs from "fs";
 
 class UserController {
   constructor(private user_usecase: UserUsecase) {}
@@ -97,6 +99,67 @@ class UserController {
       res
         .status(500)
         .json({ success: false, message: "An error occurred during login" });
+      next(error);
+    }
+  }
+
+  async verifyDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { name, email, dob, user_address, medical_history, blood_type } =
+        req.body;
+      console.log(
+        "body",
+        name,
+        email,
+        dob,
+        user_address,
+        medical_history,
+        blood_type,
+        req.body,
+      );
+      console.log("files", req.files);
+
+      const { profile_picture } = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      };
+
+      if (!profile_picture) {
+        logger.error("All files must be uploaded", 400);
+      }
+
+      const userDetails = {
+        ...req.body,
+        ...req.files,
+        _id: req.userId,
+      };
+
+      const updatedUser = await this.user_usecase.saveUserDetails(userDetails);
+      if (updatedUser?.success) {
+        [profile_picture].forEach((files) => {
+          files.forEach((file) => {
+            const filepath = path.join(
+              __dirname,
+              "../../infrastructure/public/images",
+              file.filename,
+            );
+            console.log("filepath", filepath);
+
+            fs.unlink(filepath, (err) => {
+              if (err) {
+                logger.error("error while deleting files from server ", err);
+              }
+            });
+          });
+        });
+        return res.status(200).json({
+          success: true,
+          message: "details verified successfully",
+          data: updatedUser,
+        });
+      } else {
+        logger.error("User not found", 404);
+      }
+    } catch (error) {
       next(error);
     }
   }
@@ -206,6 +269,66 @@ class UserController {
         data: serviceProvidersDetails,
         message: "ServiceProviders details fetched",
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getBlogs(req: Request, res: Response, next: NextFunction) {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 5;
+
+    try {
+      const { blogs, total } = await this.user_usecase.getListedBlogs(
+        page,
+        limit,
+      );
+      res.json({ success: true, blogs, total });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to fetch blogs" });
+    }
+  }
+
+  async getProviderSlotsDetails(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const { serviceProviderId } = req.params;
+
+      if (!serviceProviderId)
+        throw new Error("Service provider ID is required");
+
+      // Fetch details based on serviceProviderId
+      const details =
+        await this.user_usecase.getProviderSlotDetails(serviceProviderId);
+
+      return res.status(200).json({ success: true, data: { details } });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getScheduledBookingList(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const userId = req.userId;
+
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+
+      if (!userId) {
+        throw new Error("Failed to get user id");
+      }
+
+      const { bookings, total } =
+        await this.user_usecase.getScheduledBookingList(userId, page, limit);
+      return res.status(200).json({ success: true, data: bookings, total });
     } catch (error) {
       next(error);
     }

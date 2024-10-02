@@ -1,5 +1,7 @@
 import AdminUsecase from "../../usecases/admin_usecase";
 import { Request, Response, NextFunction } from "express";
+// import fs from 'fs';
+// import path from "path";
 
 class AdminController {
   constructor(private admin_usecase: AdminUsecase) {}
@@ -118,6 +120,29 @@ class AdminController {
     }
   }
 
+  async rejectServiceProviders(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const { id } = req.params;
+      const spRejected = await this.admin_usecase.rejectServiceProvider(id);
+      if (spRejected) {
+        res
+          .status(200)
+          .json({ success: true, message: "serviceProvider rejected" });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "Failed to reject serviceProvider",
+        });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async blockServiceProvider(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
@@ -187,6 +212,111 @@ class AdminController {
       if (unlistCategory) {
         return res.status(200).json({ success: true, data: unlistCategory });
       }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async addBlog(req: Request, res: Response, next: NextFunction) {
+    try {
+      const blogData = req.body;
+      const file = req.file;
+
+      if (!file) {
+        throw new Error("No file uploaded");
+      }
+
+      const blog = await this.admin_usecase.addBlog(blogData, file);
+      // console.log("blog:", blog);
+
+      // Optionally remove the file from the server if not needed
+      // const filePath = path.join(
+      //   __dirname,
+      //   "../../infrastructure/public/images",
+      //   file.filename
+      // );
+      // fs.unlink(filePath, (err) => {
+      //   if (err) {
+      //     console.error("Error deleting the file from server", err);
+      //   }
+      // });
+
+      return res.status(201).json({ success: true, blog });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async listBlogs(req: Request, res: Response, next: NextFunction) {
+    try {
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const { blogs, total } = await this.admin_usecase.listBlogs(page, limit);
+      res.status(200).json({ success: true, blogs, total });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async unlistBlog(req: Request, res: Response, next: NextFunction) {
+    try {
+      console.log("bl", req.params);
+
+      const { id } = req.params;
+      console.log("bl", id);
+
+      const unlistBlog = await this.admin_usecase.unlistBlog(id);
+      if (unlistBlog) {
+        return res.status(200).json({ success: true, data: unlistBlog });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateBlogStatus(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
+    const { blogId } = req.params;
+    const { isListed } = req.body;
+
+    try {
+      const updatedBlog = await this.admin_usecase.updateBlogStatus(
+        blogId,
+        isListed,
+      );
+      res.status(200).json({ success: true, data: updatedBlog });
+    } catch (error) {
+      res.status(500).json({ success: false, error });
+    }
+  }
+
+  async getAdminBookingsController(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+
+      const bookings = await this.admin_usecase.getAdminBookingsUseCase(
+        page,
+        limit,
+      );
+      return res.status(200).json(bookings);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Failed to get bookings" });
+    }
+  }
+
+  async getDashboardDetails(req: Request, res: Response, next: NextFunction) {
+    try {
+      const details = await this.admin_usecase.getDashboardDetails();
+      return res.status(200).json({ success: true, data: details });
     } catch (error) {
       next(error);
     }

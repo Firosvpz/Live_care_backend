@@ -4,13 +4,16 @@ import AdminRepository from "../../infrastructure/repositories/admin_repository"
 import JwtToken from "../../infrastructure/utils/jwt_token";
 import AdminUsecase from "../../usecases/admin_usecase";
 import adminAuth from "../../infrastructure/middlewares/adminAuth";
+import FileStorageService from "../../infrastructure/utils/File_storage";
+import { uploadStorage } from "../../infrastructure/middlewares/multer";
 
 const admin_router = express.Router();
 
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
 const adminRepository = new AdminRepository();
+const fileStorage = new FileStorageService();
 
-const adminCase = new AdminUsecase(adminRepository, jwt);
+const adminCase = new AdminUsecase(adminRepository, jwt, fileStorage);
 
 const controller = new AdminController(adminCase);
 
@@ -40,6 +43,10 @@ admin_router.put("/approve-sp/:id", adminAuth, (req, res, next) =>
   controller.approveServiceProviders(req, res, next),
 );
 
+admin_router.put("/reject-sp/:id", adminAuth, (req, res, next) =>
+  controller.rejectServiceProviders(req, res, next),
+);
+
 admin_router.post("/add-category", adminAuth, (req, res, next) => {
   controller.addCategory(req, res, next);
 });
@@ -51,5 +58,29 @@ admin_router.get("/categorys-list", adminAuth, (req, res, next) => {
 admin_router.put("/unlist-category/:id", adminAuth, (req, res, next) => {
   controller.unlistCategory(req, res, next);
 });
+
+admin_router.post(
+  "/add-blogs",
+  adminAuth,
+  uploadStorage.single("image"),
+  (req, res, next) => controller.addBlog(req, res, next),
+);
+admin_router.get("/blogs", adminAuth, (req, res, next) =>
+  controller.listBlogs(req, res, next),
+);
+admin_router.put("/unlist-blog/:id", adminAuth, (req, res, next) =>
+  controller.unlistBlog(req, res, next),
+);
+admin_router.put("/blog/:blogId", adminAuth, (req, res, next) =>
+  controller.updateBlogStatus(req, res, next),
+);
+
+admin_router.get("/bookings", adminAuth, (req, res, next) =>
+  controller.getAdminBookingsController(req, res, next),
+);
+
+admin_router.get("/dashboard", adminAuth, (req, res, next) =>
+  controller.getDashboardDetails(req, res, next),
+);
 
 export default admin_router;

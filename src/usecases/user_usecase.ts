@@ -6,6 +6,7 @@ import IMailService from "../interfaces/utils/IMail_service";
 import IUser from "../domain/entities/user";
 import { logger } from "../infrastructure/utils/combine_log";
 import IService_provider from "../domain/entities/service_provider";
+import IFileStorageService from "../interfaces/utils/IFile_storage_service";
 
 // type DecodedToken = {
 //   info: { userId: string };
@@ -21,6 +22,7 @@ class UserUsecase {
     private hashPassword: IHashPassword,
     private jwtToken: IJwtToken,
     private mailService: IMailService,
+    private fileStorage: IFileStorageService,
   ) {}
 
   async findUser(userInfo: IUser) {
@@ -128,6 +130,36 @@ class UserUsecase {
     }
   }
 
+  async saveUserDetails(userDetails: IUser) {
+    const { _id, profile_picture } = userDetails;
+
+    const user = await this.userRepository.findUserById(_id as string);
+
+    if (!user) {
+      logger.error("service provider not found", 404);
+      return;
+    }
+    const profilePictureUrl = await this.fileStorage.uploadFile(
+      profile_picture,
+      "profile_picture",
+    );
+    console.log("pic:", profilePictureUrl);
+
+    userDetails.profile_picture = profilePictureUrl;
+    userDetails.hasCompletedDetails = true;
+
+    const updatedUser = await this.userRepository.saveUserDetails(userDetails);
+    if (!updatedUser) {
+      logger.error("failed to update user details", 500);
+    }
+
+    return {
+      success: true,
+      message: "user details updated successfully",
+      data: updatedUser,
+    };
+  }
+
   async getProfileDetails(userId: string) {
     const user = await this.userRepository.findUserById(userId);
     return user;
@@ -163,6 +195,26 @@ class UserUsecase {
     const serviceProviderDetails =
       await this.userRepository.getServiceProviderDetails(id);
     return serviceProviderDetails;
+  }
+
+  async getListedBlogs(page: number, limit: number) {
+    return this.userRepository.getListedBlogs(page, limit);
+  }
+
+  getProviderSlotDetails(serviceProviderId: string) {
+    const details =
+      this.userRepository.getProviderSlotDetails(serviceProviderId);
+    return details;
+  }
+
+  async getScheduledBookingList(userId: string, page: number, limit: number) {
+    try {
+      const { bookings, total } =
+        await this.userRepository.getScheduledBookings(userId, page, limit);
+      return { bookings, total };
+    } catch (error) {
+      throw new Error("Failed to fetch scheduled bookings");
+    }
   }
 }
 

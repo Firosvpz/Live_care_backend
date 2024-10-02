@@ -1,11 +1,14 @@
 import { logger } from "../infrastructure/utils/combine_log";
 import IAdminRepository from "../interfaces/repositories/IAdmin_repository";
 import IJwtToken from "../interfaces/utils/IJwt_token";
+import { IBlog } from "../domain/entities/blogs";
+import IFileStorageService from "../interfaces/utils/IFile_storage_service";
 
 class AdminUsecase {
   constructor(
     private adminRepository: IAdminRepository,
     private jwtToken: IJwtToken,
+    private fileStrorageService: IFileStorageService,
   ) {}
 
   async verifyLogin(email: string, password: string) {
@@ -69,6 +72,11 @@ class AdminUsecase {
     return sp;
   }
 
+  async rejectServiceProvider(sp_id: string) {
+    const sp = await this.adminRepository.rejectServiceProvider(sp_id);
+    return sp;
+  }
+
   async addCategory(categoryName: string, subCategories: string[]) {
     const addedCategory = await this.adminRepository.addCategory(
       categoryName,
@@ -93,6 +101,48 @@ class AdminUsecase {
     const categoryUnlist =
       await this.adminRepository.unlistCategory(categoryId);
     return categoryUnlist;
+  }
+
+  async addBlog(blogData: Partial<IBlog>, file: any): Promise<IBlog> {
+    console.log("data:", blogData);
+    console.log("file:", file);
+
+    // Upload the image to Cloudinary
+    const imageUrl = await this.fileStrorageService.uploadFiles(file, "image");
+    console.log("imgUrl", imageUrl);
+
+    blogData.image = imageUrl;
+
+    const blog = await this.adminRepository.addBlog(blogData);
+    return blog;
+  }
+
+  async listBlogs(page: number, limit: number) {
+    const { blogs, total } = await this.adminRepository.listBlogs(page, limit);
+    return { blogs, total };
+  }
+
+  async unlistBlog(blogId: string) {
+    if (!blogId) {
+      throw new Error("Blog ID is required");
+    }
+    return await this.adminRepository.unlistBlog(blogId);
+  }
+  async updateBlogStatus(blogId: string, isListed: boolean): Promise<IBlog> {
+    try {
+      return await this.adminRepository.updateBlogStatus(blogId, isListed);
+    } catch (error) {
+      throw new Error(`Error in use case: `);
+    }
+  }
+  async getAdminBookingsUseCase(page: number, limit: number) {
+    const bookings = await this.adminRepository.getAllBookings(page, limit);
+    return bookings;
+  }
+
+  async getDashboardDetails() {
+    const details = await this.adminRepository.dashboardDetails();
+    return details;
   }
 }
 

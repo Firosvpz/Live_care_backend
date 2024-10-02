@@ -7,6 +7,7 @@ import sp_router from "./infrastructure/routes/service_provider_routes";
 import connectDB from "./infrastructure/config/mongodb";
 import { logger } from "./infrastructure/utils/combine_log";
 import admin_router from "./infrastructure/routes/admin_routes";
+import paymentRouter from "./infrastructure/routes/payment_routes";
 
 dotenv.config();
 
@@ -23,6 +24,16 @@ app.use(
   }),
 );
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.originalUrl === "/payment/webhook") {
+    // Use express.raw() to parse the raw body needed for Stripe webhooks
+    express.raw({ type: "application/json" })(req, res, next);
+  } else {
+    // Use express.json() for all other routes
+    express.json()(req, res, next);
+  }
+});
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,6 +49,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 app.use("/user", user_router);
 app.use("/sp", sp_router);
 app.use("/admin", admin_router);
+app.use("/payment", paymentRouter);
 app.listen(PORT, () => {
   logger.info(`server started on http://localhost:${PORT}`);
 });

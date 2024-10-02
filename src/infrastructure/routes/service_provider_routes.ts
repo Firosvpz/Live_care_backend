@@ -80,4 +80,37 @@ serviceProvider.put("/edit-password", serviceProviderAuth, (req, res, next) => {
   spController.editPassword(req, res, next);
 });
 
+serviceProvider.post("/add-slot", serviceProviderAuth, (req, res, next) =>
+  spController.addProviderSlot(req, res, next),
+);
+
+serviceProvider.get("/get-domains", serviceProviderAuth, (req, res, next) =>
+  spController.getDomains(req, res, next),
+);
+
+serviceProvider.get("/get-slots", serviceProviderAuth, (req, res, next) =>
+  spController.getProviderSlots(req, res, next),
+);
+
+serviceProvider.put(
+  "/edit-slot/:slotId",
+  serviceProviderAuth,
+  (req, res, next) => spController.editSlot(req, res, next),
+);
+
+serviceProvider.get("/get-bookings", serviceProviderAuth, (req, res, next) =>
+  spController.getScheduledBookings(req, res, next),
+);
+
+serviceProvider.put(
+  "/update-booking-status/:bookingId",
+  serviceProviderAuth,
+  (req, res, next) => spController.updateBookingStatus(req, res, next),
+);
+
+serviceProvider.post(
+  "/leave/:bookingId",
+  serviceProviderAuth,
+  spController.emergencycancelBooking,
+);
 export default serviceProvider;
