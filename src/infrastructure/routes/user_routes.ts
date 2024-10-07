@@ -9,6 +9,7 @@ import UserUsecase from "../../usecases/user_usecase";
 import userAuth from "../../infrastructure/middlewares/userAuth";
 import FileStorageService from "../../infrastructure/utils/File_storage";
 import { uploadStorage } from "../../infrastructure/middlewares/multer";
+import { GoogleAuthService } from "../../infrastructure/utils/googleAuth";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ const hash = new HashPassword();
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
 const mail = new MailService();
 const fileStorage = new FileStorageService();
+const googleAuthService = new GoogleAuthService();
 
 const userCase = new UserUsecase(
   userRepository,
@@ -26,6 +28,7 @@ const userCase = new UserUsecase(
   jwt,
   mail,
   fileStorage,
+  googleAuthService,
 );
 const controller = new UserController(userCase);
 
@@ -43,6 +46,10 @@ router.post("/resend-otp", (req, res, next) => {
 
 router.post("/user-login", (req, res, next) => {
   controller.verifyLogin(req, res, next);
+});
+
+router.post("/google-login", (req, res, next) => {
+  controller.verifyLogin(req, res, next); // Modify as needed
 });
 
 router.post(

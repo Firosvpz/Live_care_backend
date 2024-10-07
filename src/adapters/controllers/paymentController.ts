@@ -44,14 +44,14 @@ class PaymentController {
   }
 
   async handleWebhook(req: Request, res: Response, next: NextFunction) {
-    console.log("gvghvhv");
+    // console.log("gvghvhv");
 
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!.toString();
 
-    console.log("Received webhook request");
-    console.log("Headers:", req.headers);
-    console.log("Raw Body:", req.body.toString("utf8")); // Ensure this is a string for logging
-    console.log("endpoint: ", endpointSecret);
+    // console.log("Received webhook request");
+    // console.log("Headers:", req.headers);
+    // console.log("Raw Body:", req.body.toString("utf8")); // Ensure this is a string for logging
+    // console.log("endpoint: ", endpointSecret);
 
     const sig: any = req.headers["stripe-signature"];
 

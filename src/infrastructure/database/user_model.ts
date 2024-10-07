@@ -14,11 +14,11 @@ const userSchema: Schema<IUser> = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
     phone_number: {
       type: String,
-      required: true,
+      required: false,
     },
     dob: {
       type: Date,

@@ -4,7 +4,7 @@ import { service_provider } from "../../infrastructure/database/service_provider
 import { logger } from "../../infrastructure/utils/combine_log";
 import { ProviderSlotModel } from "../../infrastructure/database/slotModel";
 import ProviderSlot from "../../domain/entities/slot";
-// import { Slot,Schedule } from '../../domain/entities/slot';
+import { Slot, Schedule } from "../../domain/entities/slot";
 import Category from "../../domain/entities/category";
 import { CategoryModel } from "../../infrastructure/database/categoryModel";
 import ScheduledBooking from "../../domain/entities/booking";
@@ -78,50 +78,61 @@ class ServiceProviderRepository implements IServiceProviderRepository {
   async saveProviderSlot(slotData: ProviderSlot): Promise<ProviderSlot | null> {
     const { serviceProviderId, slots } = slotData;
 
+    const transformData = (
+      data: any[],
+      serviceProviderId: string,
+    ): ProviderSlot => {
+      const slots: Slot[] = data.map((item) => ({
+        date: new Date(item.date),
+        schedule: item.schedule.map((scheduleItem: Schedule) => ({
+          description: scheduleItem.description,
+          from: new Date(scheduleItem.from),
+          to: new Date(scheduleItem.to),
+          title: scheduleItem.title,
+          status: scheduleItem.status as "open" | "booked",
+          price: Number(scheduleItem.price),
+          services: scheduleItem.services,
+        })),
+      }));
+      return { serviceProviderId, slots };
+    };
+    const transformedData = transformData(slots, serviceProviderId);
+
     let providerSlot = await ProviderSlotModel.findOne({ serviceProviderId });
 
     if (!providerSlot) {
-      throw new Error(`Provider slot with id ${serviceProviderId} not found.`);
+      providerSlot = new ProviderSlotModel(transformedData);
+    } else {
+      transformedData.slots.forEach((newSlot) => {
+        const existingSlotIndex = providerSlot!.slots.findIndex(
+          (slot) =>
+            slot.date?.toISOString().split("T")[0] ===
+            newSlot.date?.toISOString().split("T")[0],
+        );
+
+        if (existingSlotIndex === -1) {
+          providerSlot?.slots.push(newSlot);
+        } else {
+          newSlot.schedule.forEach((newSchedule) => {
+            const existingScheduleIndex = providerSlot?.slots[
+              existingSlotIndex
+            ].schedule.findIndex(
+              (s) => newSchedule.from < s.to && newSchedule.to > s.from,
+            );
+
+            if (existingScheduleIndex === -1) {
+              providerSlot?.slots[existingSlotIndex].schedule.push(newSchedule);
+            } else {
+              throw new Error("Time slot already taken");
+
+              providerSlot!.slots[existingSlotIndex].schedule[
+                existingScheduleIndex!
+              ] = newSchedule;
+            }
+          });
+        }
+      });
     }
-
-    // Iterate through new slots to update or add
-    slots.forEach((newSlot) => {
-      // Ensure newSlot.date is defined
-      if (!newSlot.date) {
-        throw new Error("New slot date is required.");
-      }
-
-      // Find existing slot index by date
-      const existingSlotIndex = providerSlot.slots.findIndex(
-        (slot) =>
-          slot.date.toISOString().split("T")[0] ===
-          newSlot.date.toISOString().split("T")[0],
-      );
-
-      if (existingSlotIndex === -1) {
-        // If slot not found, push new slot
-        providerSlot.slots.push(newSlot);
-      } else {
-        // If slot found, update schedules
-        newSlot.schedule.forEach((newSchedule) => {
-          // Find existing schedule index by checking overlap with existing schedules
-          const existingScheduleIndex = providerSlot.slots[
-            existingSlotIndex
-          ].schedule.findIndex(
-            (schedule) =>
-              newSchedule.from < schedule.to && newSchedule.to > schedule.from,
-          );
-
-          // If there's no overlap, add the new schedule
-          if (existingScheduleIndex === -1) {
-            providerSlot.slots[existingSlotIndex].schedule.push(newSchedule);
-          } else {
-            // If there is an overlap, handle it
-            throw new Error("Time slot already taken");
-          }
-        });
-      }
-    });
 
     // Save updated provider slot document
     const savedSlot = await providerSlot.save();

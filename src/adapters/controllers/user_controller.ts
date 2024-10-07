@@ -3,9 +3,14 @@ import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
 import path from "path";
 import fs from "fs";
+// import { OAuth2Client } from "google-auth-library";
 
 class UserController {
-  constructor(private user_usecase: UserUsecase) {}
+  // private oauth2Client: OAuth2Client;
+
+  constructor(private user_usecase: UserUsecase) {
+    // this.oauth2Client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+  }
   async verifyUserEmail(req: Request, res: Response, next: NextFunction) {
     try {
       const userInfo = req.body;
@@ -16,6 +21,7 @@ class UserController {
 
       if (response?.status === 201) {
         const token = response.data;
+
         return res.status(200).json({
           success: true,
           token,
@@ -77,8 +83,24 @@ class UserController {
 
   async verifyLogin(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
-      const user = await this.user_usecase.userLogin(email, password);
+      const { email, password, idToken } = req.body;
+      let user;
+
+      if (idToken) {
+        user = await this.user_usecase.googleLogin(idToken);
+        console.log("user", user);
+
+        // Store the Google token in a cookie for later (e.g., for logout or token revocation)
+        if (user?.success) {
+          res.cookie("googleToken", idToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 3600 * 1000, // Expire in 1 hour or set this according to your needs
+          });
+        }
+      } else {
+        user = await this.user_usecase.userLogin(email, password);
+      }
 
       if (user?.success) {
         res.cookie("userToken", user.data?.token, {
@@ -90,9 +112,8 @@ class UserController {
 
         res.status(200).json(user);
       } else {
+        // If login fails, return an error message
         res.status(400).json(user);
-
-        // throw new Error(user.message);
       }
     } catch (error) {
       console.error("Server error:", error); // Log server errors for debugging
@@ -163,16 +184,25 @@ class UserController {
       next(error);
     }
   }
-
   async logout(req: Request, res: Response, next: NextFunction) {
-    console.log("hello");
-
+    console.log("User logging out");
     try {
+      // Log the cookies to verify the presence of tokens
+      console.log("goog", req.cookies);
+
+      // Clear both Google token and user token cookies
+      res.cookie("googleToken", "", {
+        httpOnly: true,
+        expires: new Date(0),
+      });
       res.cookie("userToken", "", {
         httpOnly: true,
         expires: new Date(0),
       });
-      res.status(200).json({ success: true });
+
+      res
+        .status(200)
+        .json({ success: true, message: "Logged out successfully" });
     } catch (error) {
       next(error);
     }

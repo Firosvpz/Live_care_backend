@@ -34,6 +34,15 @@ class UserRepository implements IUserRepository {
     return save_user;
   }
 
+  async findUserByGoogleId(googleId: string): Promise<any> {
+    return await users.findOne({ googleId });
+  }
+
+  async createUser(userData: any): Promise<any> {
+    const user = new users(userData);
+    return await user.save();
+  }
+
   async saveUserDetails(userDetails: IUser): Promise<IUser | null> {
     const updatedUser = await users.findByIdAndUpdate(
       userDetails._id,

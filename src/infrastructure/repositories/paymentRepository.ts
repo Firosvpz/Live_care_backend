@@ -2,6 +2,7 @@ import { ProviderSlotModel } from "../../infrastructure/database/slotModel";
 // import users from "infrastructure/database/user_model";
 import { ScheduledBookingModel } from "../../infrastructure/database/bookingModel";
 import IPaymentRepository from "../../interfaces/repositories/IPaymentRepository";
+// import ScheduledBooking from "domain/entities/booking";
 
 interface ProcessRefundResult {
   success: boolean;

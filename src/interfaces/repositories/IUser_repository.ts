@@ -26,5 +26,7 @@ interface IUserRepository {
     limit: number,
   ): Promise<{ bookings: ScheduledBooking[] | null; total: number }>;
   getProviderSlotDetails(serviceProviderId: string): Promise<any>;
+  findUserByGoogleId(googleId: string): Promise<any>;
+  createUser(userData: any): Promise<any>;
 }
 export default IUserRepository;

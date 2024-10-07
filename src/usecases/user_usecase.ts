@@ -7,6 +7,7 @@ import IUser from "../domain/entities/user";
 import { logger } from "../infrastructure/utils/combine_log";
 import IService_provider from "../domain/entities/service_provider";
 import IFileStorageService from "../interfaces/utils/IFile_storage_service";
+import IGoogleAuthService from "../interfaces/utils/IGoogleAuth";
 
 // type DecodedToken = {
 //   info: { userId: string };
@@ -23,6 +24,7 @@ class UserUsecase {
     private jwtToken: IJwtToken,
     private mailService: IMailService,
     private fileStorage: IFileStorageService,
+    private googleAuthService: IGoogleAuthService,
   ) {}
 
   async findUser(userInfo: IUser) {
@@ -45,6 +47,7 @@ class UserUsecase {
       };
     }
   }
+
   async getUserInfoUsingToken(token: string) {
     const decodedToken = this.jwtToken.verifyJwtToken(token);
     if (!decodedToken) {
@@ -118,7 +121,10 @@ class UserUsecase {
       const token = this.jwtToken.createJwtToken(user._id as string, "user");
       return {
         success: true,
-        data: { token: token },
+        data: {
+          token: token,
+          userId: user._id,
+        },
         message: "Login successful",
       };
     } catch (error) {
@@ -126,6 +132,98 @@ class UserUsecase {
       return {
         success: false,
         message: "An error occurred during login",
+      };
+    }
+  }
+
+  async googleLogin(idToken: string) {
+    try {
+      const payload = await this.googleAuthService.verifyGoogleToken(idToken);
+
+      if (!payload) {
+        logger.error("Invalid Google token");
+        return {
+          success: false,
+          message: "Invalid Google token",
+        };
+      }
+
+      const { sub: googleId, email, name } = payload;
+      console.log("id", googleId);
+      console.log("emil", email);
+      console.log("name", name);
+
+      let user = await this.userRepository.findUserByGoogleId(googleId); // Find user by Google ID
+      console.log("googleUesr", user);
+
+      if (user) {
+        // If user exists by Google ID, return success
+        const token = this.jwtToken.createJwtToken(user._id as string, "user");
+
+        return {
+          success: true,
+          data: {
+            token: token,
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+          },
+          message: "Google login successful",
+        };
+      }
+
+      user = await this.userRepository.findUserByEmail(email);
+      if (user) {
+        // If user exists by email but not by Google ID, associate Google ID with existing user
+        user.googleId = googleId; // Update the user to include Google ID
+        await user.save(); // Save the updated user
+
+        // Generate JWT token for the user
+        const token = this.jwtToken.createJwtToken(user._id as string, "user");
+
+        return {
+          success: true,
+          data: {
+            token: token,
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+          },
+          message: "Google login successful",
+        };
+      }
+
+      if (!user) {
+        // If the user doesn't exist, create a new one
+        user = await this.userRepository.createUser({
+          googleId,
+          email,
+          name,
+        });
+      } else {
+        // If user exists by email but not by Google ID, associate Google ID with existing user
+        user.googleId = googleId; // Update the user to include Google ID
+        await user.save(); // Save the updated user
+      }
+
+      // Generate JWT token for the user
+      const token = this.jwtToken.createJwtToken(user._id as string, "user");
+
+      return {
+        success: true,
+        data: {
+          token: token,
+          userId: user._id,
+          name: user.name,
+          email: user.email,
+        },
+        message: "Google login successful",
+      };
+    } catch (error) {
+      logger.error("An error occurred during Google login", error);
+      return {
+        success: false,
+        message: "An error occurred during Google login",
       };
     }
   }

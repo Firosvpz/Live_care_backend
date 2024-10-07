@@ -5,6 +5,7 @@ import JwtToken from "../../infrastructure/utils/jwt_token";
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
 const userRepository = new UserRepository();
 
+// Extending express request object
 declare global {
   namespace Express {
     interface Request {
