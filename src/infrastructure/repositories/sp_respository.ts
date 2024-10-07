@@ -78,16 +78,13 @@ class ServiceProviderRepository implements IServiceProviderRepository {
   async saveProviderSlot(slotData: ProviderSlot): Promise<ProviderSlot | null> {
     const { serviceProviderId, slots } = slotData;
 
-    const transformData = (
-      data: any[],
-      serviceProviderId: string,
-    ): ProviderSlot => {
+    const transformData = (data: any[], serviceProviderId: string): ProviderSlot => {
       const slots: Slot[] = data.map((item) => ({
         date: new Date(item.date),
         schedule: item.schedule.map((scheduleItem: Schedule) => ({
           description: scheduleItem.description,
-          from: new Date(scheduleItem.from),
-          to: new Date(scheduleItem.to),
+          from: new Date(scheduleItem.from), // Ensure conversion to Date
+          to: new Date(scheduleItem.to),     // Ensure conversion to Date
           title: scheduleItem.title,
           status: scheduleItem.status as "open" | "booked",
           price: Number(scheduleItem.price),
@@ -106,33 +103,29 @@ class ServiceProviderRepository implements IServiceProviderRepository {
       transformedData.slots.forEach((newSlot) => {
         const existingSlotIndex = providerSlot!.slots.findIndex(
           (slot) =>
-            slot.date?.toISOString().split("T")[0] ===
-            newSlot.date?.toISOString().split("T")[0],
+            slot.date?.toString().split("T")[0] ===
+            newSlot.date?.toString().split("T")[0], // Same date
         );
-
+      
         if (existingSlotIndex === -1) {
-          providerSlot?.slots.push(newSlot);
+          providerSlot?.slots.push(newSlot); // No conflict, add the new slot
         } else {
           newSlot.schedule.forEach((newSchedule) => {
             const existingScheduleIndex = providerSlot?.slots[
               existingSlotIndex
             ].schedule.findIndex(
-              (s) => newSchedule.from < s.to && newSchedule.to > s.from,
+              (s) => newSchedule.from < s.to && newSchedule.to > s.from, // Check for overlap
             );
-
-            if (existingScheduleIndex === -1) {
-              providerSlot?.slots[existingSlotIndex].schedule.push(newSchedule);
-            } else {
+      
+            if (existingScheduleIndex !== -1) {
               throw new Error("Time slot already taken");
-
-              providerSlot!.slots[existingSlotIndex].schedule[
-                existingScheduleIndex!
-              ] = newSchedule;
+            } else {
+              providerSlot!.slots[existingSlotIndex].schedule.push(newSchedule);
             }
           });
         }
       });
-    }
+    }      
 
     // Save updated provider slot document
     const savedSlot = await providerSlot.save();

@@ -16,14 +16,16 @@ class JwtToken implements IJwtToken {
 
   verifyJwtToken(token: string): JwtPayload | null {
     try {
-      // console.log('Attempting to verify token:', token, 'with secret key:', this.secret_key);
-
+     
       const decodedToken = jwt.verify(token, this.secret_key) as JwtPayload;
-      // console.log('Token successfully verified:', decodedToken);
 
       return decodedToken;
     } catch (error: any) {
       // Log the detailed error message for better debugging
+      if (error.name === "TokenExpiredError") {
+        logger.error("JWT token has expired");
+        throw new Error("JWT token expired. Please refresh the token.");
+      }
       console.error("Error occurred in verifyJwtToken:", error.message);
       logger.error(`Error verifying JWT token: ${error.message}`);
 

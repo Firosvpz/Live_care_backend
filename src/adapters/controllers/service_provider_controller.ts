@@ -282,11 +282,11 @@ class ServiceProviderController {
         (option: Service) => option.value,
       );
       const serviceProviderId = req.serviceProviderId;
-
+  
       if (!serviceProviderId) {
         throw new Error("Unauthorized user");
       }
-
+  
       const slotData: ProviderSlot = {
         serviceProviderId,
         slots: [
@@ -295,8 +295,8 @@ class ServiceProviderController {
             schedule: [
               {
                 description,
-                from: timeFrom,
-                to: timeTo,
+                from: new Date(timeFrom), // Ensure timeFrom is a Date
+                to: new Date(timeTo),     // Ensure timeTo is a Date
                 title,
                 status: "open",
                 price,
@@ -306,7 +306,7 @@ class ServiceProviderController {
           },
         ],
       };
-
+  
       const slotAdded = await this.spUsecase.addSlot(slotData);
       return res.status(201).json({
         success: true,
@@ -315,8 +315,10 @@ class ServiceProviderController {
       });
     } catch (error: any) {
       console.error("Error adding slot:", error);
+      return res.status(500).json({ success: false, message: error.message });
     }
   }
+  
 
   async getProviderSlots(req: Request, res: Response, next: NextFunction) {
     try {
