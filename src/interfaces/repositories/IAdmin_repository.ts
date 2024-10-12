@@ -35,6 +35,8 @@ interface IAdminRepository {
   updateBlogStatus(blogId: string, isListed: boolean): Promise<IBlog>;
   getAllBookings(page: number, limit: number): Promise<ScheduledBooking[]>;
   dashboardDetails(): Promise<any>;
+  getAllComplaints(): Promise<any[]>;
+  respondToComplaint(id: string, responseMessage: string): Promise<boolean>;
 }
 
 export default IAdminRepository;

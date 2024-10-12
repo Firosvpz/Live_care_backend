@@ -6,11 +6,13 @@ export interface Schedule {
   status: "open" | "booked";
   price: number;
   services: string[];
+ 
 }
 
 export interface Slot {
   date: Date;
   schedule: Schedule[];
+ 
 }
 
 interface ProviderSlot {

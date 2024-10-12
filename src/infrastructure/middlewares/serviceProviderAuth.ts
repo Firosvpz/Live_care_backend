@@ -23,42 +23,38 @@ const serviceProviderAuth = async (
   res: Response,
   next: NextFunction,
 ) => {
-  let token = req.cookies.serviceProviderToken;
+  const token = req.cookies.serviceProviderToken;
 
   if (!token) {
+    logger.warn(`Unauthorized access attempt: No token provided, Path: ${req.path}`);
     return res.status(401).json({
       success: false,
-      message: "Unautherized,No token provide",
+      message: "Unauthorized, No token provided",
     });
   }
+
   try {
     const decodedToken = jwt.verifyJwtToken(token);
-    // console.log("gdfhhhh", decodedToken);
-    if (decodedToken && decodedToken.role !== "serviceProvider") {
-      return res
-        .status(401)
-        .send({ success: false, message: "Unauthorized - Invalid Token" });
+    
+    if (!decodedToken || decodedToken.role !== "serviceProvider") {
+      logger.warn(`Unauthorized access attempt: Invalid token, Path: ${req.path}`);
+      return res.status(401).send({ success: false, message: "Unauthorized - Invalid Token" });
     }
 
-    if (decodedToken && decodedToken.id) {
-      logger.info("tokenn", decodedToken, decodedToken.id);
-      const serviceProvider = await spRepository.findById(decodedToken.id);
-      if (serviceProvider?.is_blocked) {
-        return res
-          .status(401)
-          .send({ success: false, message: "You are blocked!" });
-      }
-      req.serviceProviderId = serviceProvider?._id;
-      next();
-    } else {
-      return res
-        .status(401)
-        .send({ success: false, message: "Unauthorized - Invalid Token" });
+    const serviceProvider = await spRepository.findById(decodedToken.id);
+    
+    if (serviceProvider?.is_blocked) {
+      logger.warn(`Blocked service provider attempted access: ID ${decodedToken.id}, Path: ${req.path}`);
+      return res.status(401).send({ success: false, message: "You are blocked!" });
     }
-  } catch (error) {
-    return res
-      .status(401)
-      .send({ success: false, message: "Unauthorized - Invalid token" });
+
+    req.serviceProviderId = serviceProvider?._id;
+    logger.info(`Token verified for service provider ID: ${decodedToken.id}, Path: ${req.path}`);
+    next();
+  } catch (error:any) {
+    logger.error(`Authentication error: ${error.message}`, { error });
+    return res.status(401).send({ success: false, message: "Unauthorized - Invalid token" });
   }
 };
+
 export default serviceProviderAuth;

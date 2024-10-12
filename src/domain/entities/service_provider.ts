@@ -1,3 +1,11 @@
+export interface IReview {
+  userId: string ;
+  userName?: string;
+  rating: number;
+  comment: string;
+  createdAt?: Date;
+}
+
 interface IService_provider {
   _id?: string;
   name: string;
@@ -16,5 +24,8 @@ interface IService_provider {
   is_approved: "Approved" | "Pending" | "Rejected";
   is_blocked: boolean;
   hasCompletedDetails: boolean;
+  ratingAverage?: number;
+  reviewCount?: number;
+  reviews?: IReview[];
 }
 export default IService_provider;

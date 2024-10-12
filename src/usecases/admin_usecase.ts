@@ -144,6 +144,17 @@ class AdminUsecase {
     const details = await this.adminRepository.dashboardDetails();
     return details;
   }
+
+  async getAllComplaints() {
+    return await this.adminRepository.getAllComplaints();
+  }
+
+  async respondToComplaint(
+    id: string,
+    responseMessage: string
+  ): Promise<boolean> {
+    return this.adminRepository.respondToComplaint(id, responseMessage);
+  }
 }
 
 export default AdminUsecase;

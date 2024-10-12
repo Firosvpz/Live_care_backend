@@ -10,6 +10,7 @@ import { CategoryModel } from "../../infrastructure/database/categoryModel";
 import ScheduledBooking from "../../domain/entities/booking";
 import { ScheduledBookingModel } from "../../infrastructure/database/bookingModel";
 import users from "../../infrastructure/database/user_model";
+import { IReview } from '../../domain/entities/service_provider';
 
 class ServiceProviderRepository implements IServiceProviderRepository {
   async findByEmail(email: string): Promise<IService_provider | null> {
@@ -75,6 +76,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
       password: password,
     });
   }
+
   async saveProviderSlot(slotData: ProviderSlot): Promise<ProviderSlot | null> {
     const { serviceProviderId, slots } = slotData;
 
@@ -268,6 +270,12 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         email: user.email,
       },
     };
+  }
+
+  
+  async getReviews(providerId: string): Promise<IReview[]> {
+    const provider = await service_provider.findById(providerId).populate("reviews.user");
+    return provider?.reviews || [];
   }
 }
 export default ServiceProviderRepository;

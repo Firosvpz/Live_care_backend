@@ -100,4 +100,15 @@ router.get("/slot-details/:serviceProviderId", (req, res, next) =>
 router.get("/get-bookings", userAuth, (req, res, next) =>
   controller.getScheduledBookingList(req, res, next),
 );
+
+router.post("/complaints", userAuth, (req, res) =>
+  controller.fileComplaint(req, res)
+);
+router.get("/complaints/:userId", userAuth, (req, res) =>
+  controller.getUserComplaints(req, res)
+);
+router.post("/add-review",userAuth, (req, res) =>
+  controller.addReview(req, res)
+);
+
 export default router;

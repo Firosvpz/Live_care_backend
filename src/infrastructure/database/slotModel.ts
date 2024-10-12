@@ -11,6 +11,7 @@ const ScheduleSchema = new mongoose.Schema<Schedule>(
     status: { type: String, enum: ["open", "booked"], required: true },
     price: { type: Number, required: true },
     services: { type: [String], required: true },
+    
   },
   { _id: true },
 );
@@ -18,6 +19,7 @@ const ScheduleSchema = new mongoose.Schema<Schedule>(
 const SlotSchema = new mongoose.Schema<Slot>({
   date: { type: Date, required: true },
   schedule: { type: [ScheduleSchema], required: true },
+
 });
 
 const ProviderSlotSchema = new mongoose.Schema<ProviderSlot>({

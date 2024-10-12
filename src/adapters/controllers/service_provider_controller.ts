@@ -5,8 +5,6 @@ import path from "path";
 import fs from "fs";
 import ProviderSlot from "../../domain/entities/slot";
 import MailService from "../../infrastructure/utils/mail_service";
-// import { ProviderSlotModel } from "infrastructure/database/slotModel";
-
 interface Service {
   value: string;
   label: string;
@@ -274,6 +272,8 @@ class ServiceProviderController {
     }
   }
 
+
+
   async addProviderSlot(req: Request, res: Response, next: NextFunction) {
     try {
       const { date, description, timeFrom, timeTo, title, price, services } =
@@ -318,7 +318,6 @@ class ServiceProviderController {
       return res.status(500).json({ success: false, message: error.message });
     }
   }
-  
 
   async getProviderSlots(req: Request, res: Response, next: NextFunction) {
     try {
@@ -338,6 +337,7 @@ class ServiceProviderController {
         limit,
         searchQuery,
       );
+      
       return res.status(200).json({
         success: true,
         data: slots,
@@ -445,6 +445,8 @@ class ServiceProviderController {
       return res.status(500).json({ message: "Cancellation failed", error });
     }
   }
+
+  
 }
 
 export default ServiceProviderController;
