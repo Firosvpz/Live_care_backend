@@ -18,7 +18,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: ["https://live-care.online"],
+    origin: "https://live-care.online",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   }),
