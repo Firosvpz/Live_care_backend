@@ -15,15 +15,10 @@ class MailService implements IMailService {
         pass: process.env.Email_Password,
       },
     });
-    // this.validate_config();
+    
   }
 
-  // private validate_config() {
-  //   if (!process.env.Email || !process.env.Email_Password) {
-  //     logger.error(`Email or Email password in env is not set`);
-  //     throw new Error("Email configuration missing");
-  //   }
-  // }
+ 
 
   async sendMail(name: string, email: string, otp: string): Promise<void> {
     const email_content = `
