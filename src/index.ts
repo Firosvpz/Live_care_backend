@@ -25,7 +25,7 @@ app.use(
 );
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.originalUrl === "/payment/webhook") {
+  if (req.originalUrl === "/api/payment/webhook") {
     // Use express.raw() to parse the raw body needed for Stripe webhooks
     express.raw({ type: "application/json" })(req, res, next);
   } else {
@@ -46,10 +46,10 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.use("/user", user_router);
-app.use("/sp", sp_router);
-app.use("/admin", admin_router);
-app.use("/payment", paymentRouter);
+app.use("/api/user", user_router);
+app.use("/api/sp", sp_router);
+app.use("/api/admin", admin_router);
+app.use("/api/payment", paymentRouter);
 app.listen(PORT, () => {
   logger.info(`server started on port https://live-care.online`);
 });
