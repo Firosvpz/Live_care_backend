@@ -83,4 +83,13 @@ admin_router.get("/dashboard", adminAuth, (req, res, next) =>
   controller.getDashboardDetails(req, res, next),
 );
 
+admin_router.get('/complaints', adminAuth,
+  (req, res, next) => controller.getAllComplaints(req, res, next)
+);
+
+admin_router.put('/respond-to-complaint/:id',  adminAuth,
+  (req, res, next) => controller.respondToComplaint(req, res, next)
+);
+
+
 export default admin_router;

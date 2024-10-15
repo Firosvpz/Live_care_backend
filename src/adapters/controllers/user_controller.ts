@@ -83,10 +83,13 @@ class UserController {
 
   async verifyLogin(req: Request, res: Response, next: NextFunction) {
     try {
+      
       const { email, password, idToken } = req.body;
       let user;
 
       if (idToken) {
+        console.log('idtoken',idToken);
+        
         user = await this.user_usecase.googleLogin(idToken);
         console.log("user", user);
 
@@ -363,6 +366,63 @@ class UserController {
       next(error);
     }
   }
+
+  async fileComplaint(req: Request, res: Response): Promise<void> {
+    try {
+      console.log("re", req.body);
+
+      const { userId, subject, message } = req.body;
+
+      if (!userId || !subject || !message) {
+        res.status(400).json({ error: "Missing required fields" });
+        return;
+      }
+
+      // Create a complaint object
+      const complaint = {
+        userId,
+        subject,
+        message,
+        isResolved: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await this.user_usecase.fileComplaint(complaint);
+
+      res.status(201).json(result);
+    } catch (error) {
+      console.error("Error filing complaint:", error);
+      res.status(500).json({ error: "Failed to file complaint" });
+    }
+  }
+
+  async getUserComplaints(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const complaints = await this.user_usecase.getUserComplaints(userId);
+      res.status(200).json(complaints);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get complaints" });
+    }
+  }
+
+  async addReview(req: Request, res: Response) {
+    console.log('pro',req.body);
+    const { providerId, rating, comment } = req.body;
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    try {
+      const updatedProvider = await this.user_usecase.addReview(providerId, userId, rating, comment);
+      res.status(200).json(updatedProvider);
+    } catch (error:any) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+
 }
 
 export default UserController;

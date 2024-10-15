@@ -2,6 +2,7 @@ import IService_provider from "../../domain/entities/service_provider";
 import ProviderSlot from "../../domain/entities/slot";
 import Category from "../../domain/entities/category";
 import ScheduledBooking from "../../domain/entities/booking";
+import { IReview } from '../../domain/entities/service_provider';
 
 interface IServiceProviderRepository {
   findByEmail(email: string): Promise<IService_provider | null>;
@@ -37,6 +38,7 @@ interface IServiceProviderRepository {
   updateStatus(bookingId: string, status: string): Promise<any>;
   findBookingById(bookingId: string): Promise<any>;
   cancelBooking(bookingId: string, cancelReason: string): Promise<any>;
+ 
 }
 
 export default IServiceProviderRepository;

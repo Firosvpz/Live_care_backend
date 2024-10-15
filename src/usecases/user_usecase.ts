@@ -8,6 +8,8 @@ import { logger } from "../infrastructure/utils/combine_log";
 import IService_provider from "../domain/entities/service_provider";
 import IFileStorageService from "../interfaces/utils/IFile_storage_service";
 import IGoogleAuthService from "../interfaces/utils/IGoogleAuth";
+import { IComplaint } from '../infrastructure/database/complaintModel';
+import { IReview } from '../domain/entities/service_provider';
 
 // type DecodedToken = {
 //   info: { userId: string };
@@ -314,6 +316,27 @@ class UserUsecase {
       throw new Error("Failed to fetch scheduled bookings");
     }
   }
+
+  async fileComplaint(complaint:  Partial<IComplaint>): Promise<IComplaint> {
+    return this.userRepository.createComplaint(complaint);
+  }
+
+  async getUserComplaints(userId: string): Promise<IComplaint[]> {
+    return this.userRepository.getComplaintsByUser(userId);
+  }
+
+  async addReview(providerId: string, userId: string, rating: number, comment: string) {
+    // console.log('user:',userId,'rating:',rating,"comment:",comment);
+    
+    const review: IReview = {
+      userId,
+      rating,
+      comment,
+      createdAt: new Date(),
+    };
+    return this.userRepository.addReview(providerId, review);
+  }
+
 }
 
 export default UserUsecase;

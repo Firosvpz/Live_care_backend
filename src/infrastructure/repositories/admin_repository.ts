@@ -11,6 +11,7 @@ import { IBlog } from "../../domain/entities/blogs";
 import { BlogModel } from "../../infrastructure/database/blogsModel";
 import { ScheduledBookingModel } from "../../infrastructure/database/bookingModel";
 import ScheduledBooking from "../../domain/entities/booking";
+import { Complaint } from "../../infrastructure/database/complaintModel";
 
 class AdminRepository implements IAdminRepository {
   async findByEmail(email: string): Promise<IAdmin | null> {
@@ -272,6 +273,33 @@ class AdminRepository implements IAdminRepository {
       scheduledBookings,
     };
   }
+  async getAllComplaints(): Promise<any[]> {
+    return await Complaint.find().sort({ createdAt: -1 });
+  }
+
+  async respondToComplaint(
+    id: string,
+    responseMessage: string
+  ): Promise<boolean> {
+    try {
+      const complaint = await Complaint.findById(id).sort({ createdAt: -1 });
+
+      if (!complaint) {
+        return false;
+      }
+
+      complaint.response = responseMessage;
+      complaint.isResolved = true;
+      await complaint.save();
+
+      return true;
+    } catch (error) {
+      console.error("Error responding to complaint:", error);
+      return false;
+    }
+  }
+
+ 
 }
 
 export default AdminRepository;

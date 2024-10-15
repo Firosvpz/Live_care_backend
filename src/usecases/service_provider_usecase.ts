@@ -9,6 +9,7 @@ import IService_provider from "../domain/entities/service_provider";
 import { CategoryModel } from "../infrastructure/database/categoryModel";
 import ProviderSlot from '../domain/entities/slot';
 
+
 // type DecodedToken = {
 //   info: { userId: string };
 //   otp: string;
@@ -360,6 +361,7 @@ class ServiceProviderUsecase {
       throw error;
     }
   }
+
 }
 
 

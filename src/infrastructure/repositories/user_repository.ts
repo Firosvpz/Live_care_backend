@@ -9,6 +9,9 @@ import { BlogModel } from "../../infrastructure/database/blogsModel";
 import { ProviderSlotModel } from "../../infrastructure/database/slotModel";
 import { ScheduledBookingModel } from "../../infrastructure/database/bookingModel";
 import ScheduledBooking from "../../domain/entities/booking";
+import { Complaint } from "../../infrastructure/database/complaintModel";
+import { IComplaint } from '../database/complaintModel';
+import { IReview } from '../../domain/entities/service_provider';
 
 class UserRepository implements IUserRepository {
   async findUserByEmail(email: string): Promise<IUser | null> {
@@ -37,7 +40,7 @@ class UserRepository implements IUserRepository {
   async findUserByGoogleId(googleId: string): Promise<any> {
     return await users.findOne({ googleId });
   }
-
+  
   async createUser(userData: any): Promise<any> {
     const user = new users(userData);
     return await user.save();
@@ -193,6 +196,73 @@ class UserRepository implements IUserRepository {
     const total = await ScheduledBookingModel.countDocuments({ userId });
 
     return { bookings: bookingList, total };
+  }
+
+  async createComplaint(complaint: IComplaint): Promise<IComplaint> {
+    const newComplaint = new Complaint(complaint);
+    await newComplaint.save();
+    return newComplaint.toObject();
+  }
+
+  async getComplaintsByUser(userId: string): Promise<IComplaint[]> {
+    return Complaint.find({ userId }).sort({ createdAt: -1 }).exec();
+  }
+
+  async addReview(providerId: string, review: IReview): Promise<IService_provider | null> {
+    // console.log('proId', providerId);
+    // console.log('review', review);
+
+    try {
+        // Fetch the provider by ID
+        const provider = await service_provider.findById(providerId);
+        // console.log('pro', provider);
+        
+        // Check if the provider exists
+        if (!provider) {
+            console.error(`Provider with ID ${providerId} not found.`);
+            throw new Error(`Provider with ID ${providerId} not found.`);
+        }
+
+        // Initialize reviews array if it's undefined
+        if (!provider.reviews) {
+            provider.reviews = [];
+        }
+
+        // Push the new review into the reviews array
+        provider.reviews.push(review);
+        
+        // Update review count
+        provider.reviewCount = (provider.reviewCount || 0) + 1;
+
+        // Recalculate rating
+        await this.calculateRating(providerId); // Recalculate rating after adding a review
+
+        // Save the updated provider document
+        const updatedProvider = await provider.save();
+
+        // Log the updated provider to verify the changes
+        console.log('Updated Provider:', updatedProvider);
+
+        return updatedProvider;
+    } catch (error: any) {
+        // Log the error for debugging
+        console.error('Error adding review:', error.message);
+
+        // Return a structured error response
+        throw new Error(`Failed to add review: ${error.message}`);
+    }
+}
+
+
+  async calculateRating(providerId: string): Promise<number> {
+    const provider = await service_provider.findById(providerId);
+    if (!provider || !provider.reviews || provider.reviews.length === 0) return 0;
+
+    const totalRating = provider.reviews?.reduce((sum, review) => sum + review.rating, 0);
+    provider.ratingAverage = totalRating / provider.reviews.length;
+    await provider.save();
+
+    return provider.ratingAverage;
   }
 }
 

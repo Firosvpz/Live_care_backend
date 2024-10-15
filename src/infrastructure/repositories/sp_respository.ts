@@ -10,6 +10,7 @@ import { CategoryModel } from "../../infrastructure/database/categoryModel";
 import ScheduledBooking from "../../domain/entities/booking";
 import { ScheduledBookingModel } from "../../infrastructure/database/bookingModel";
 import users from "../../infrastructure/database/user_model";
+import { IReview } from '../../domain/entities/service_provider';
 
 class ServiceProviderRepository implements IServiceProviderRepository {
   async findByEmail(email: string): Promise<IService_provider | null> {
@@ -75,6 +76,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
       password: password,
     });
   }
+
   async saveProviderSlot(slotData: ProviderSlot): Promise<ProviderSlot | null> {
     const { serviceProviderId, slots } = slotData;
 
@@ -131,19 +133,21 @@ class ServiceProviderRepository implements IServiceProviderRepository {
     const savedSlot = await providerSlot.save();
     return savedSlot;
   }
-
   async getDomains(): Promise<Category[] | null> {
     const domainList = await CategoryModel.find({ isListed: true });
     if (!domainList) throw new Error("Domains not found!");
     return domainList;
   }
-
   async getProviderSlots(
     serviceProviderId: string,
     page: number,
     limit: number,
     searchQuery: string,
   ): Promise<{ slots: ProviderSlot[]; total: number }> {
+    if (typeof page !== 'number' || typeof limit !== 'number' || page <= 0 || limit <= 0) {
+      throw new Error("Page and limit must be positive integers.");
+    }
+  
     const pipeline: any[] = [
       {
         $match: { serviceProviderId: serviceProviderId.toString() },
@@ -152,9 +156,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $unwind: "$slots",
       },
     ];
-
-    // console.log(await ProviderSlotModel.aggregate(pipeline));
-
+  
     if (searchQuery) {
       pipeline.push({
         $match: {
@@ -169,7 +171,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         },
       });
     }
-
+  
     pipeline.push(
       {
         $project: {
@@ -182,11 +184,11 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $sort: { date: -1 },
       },
     );
-
+  
     const totalPipeline = [...pipeline, { $count: "total" }];
     const [totalResult] = await ProviderSlotModel.aggregate(totalPipeline);
     const total = totalResult ? totalResult.total : 0;
-
+  
     pipeline.push(
       {
         $skip: (page - 1) * limit,
@@ -195,11 +197,13 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $limit: limit,
       },
     );
-
+  
     const slots = await ProviderSlotModel.aggregate(pipeline);
-
+  
     return { slots, total };
   }
+  
+
 
   async findProviderSlot(slotId: string) {
     return await ProviderSlotModel.findOne({ "slots._id": slotId });
@@ -268,6 +272,12 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         email: user.email,
       },
     };
+  }
+
+  
+  async getReviews(providerId: string): Promise<IReview[]> {
+    const provider = await service_provider.findById(providerId).populate("reviews.user");
+    return provider?.reviews || [];
   }
 }
 export default ServiceProviderRepository;

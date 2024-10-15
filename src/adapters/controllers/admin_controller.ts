@@ -321,5 +321,47 @@ class AdminController {
       next(error);
     }
   }
+  async getAllComplaints(req: Request, res: Response, next: NextFunction) {
+    try {
+      const complaints = await this.admin_usecase.getAllComplaints();
+      res.status(200).json(complaints);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch complaints" });
+      next(error);
+    }
+  }
+
+  async respondToComplaint(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params; // Complaint ID
+      const { responseMessage } = req.body; // Response message
+      console.log("id", id, "re", responseMessage);
+
+      if (!responseMessage) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Response message is required" });
+      }
+
+      const response = await this.admin_usecase.respondToComplaint(
+        id,
+        responseMessage
+      );
+
+      if (response) {
+        return res
+          .status(200)
+          .json({ success: true, message: "Complaint responded successfully" });
+      } else {
+        return res
+          .status(404)
+          .json({ success: false, message: "Complaint not found" });
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
 }
 export default AdminController;

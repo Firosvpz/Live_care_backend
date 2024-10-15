@@ -9,8 +9,8 @@ import HashPassword from "../../infrastructure/utils/hash_password";
 import JwtToken from "../../infrastructure/utils/jwt_token";
 import MailService from "../../infrastructure/utils/mail_service";
 import ServiceProviderUsecase from "../../usecases/service_provider_usecase";
-const serviceProvider = express.Router();
 
+const serviceProvider = express.Router()
 const otp = new GenerateOtp();
 const hash = new HashPassword();
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
@@ -113,4 +113,6 @@ serviceProvider.post(
   serviceProviderAuth,
   spController.emergencycancelBooking,
 );
+
+
 export default serviceProvider;

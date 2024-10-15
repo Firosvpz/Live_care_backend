@@ -9,7 +9,7 @@ class JwtToken implements IJwtToken {
   }
   createJwtToken(id: string, role: string): string {
     const payload: JwtPayload = { id, role };
-    const token = jwt.sign(payload, this.secret_key, { expiresIn: "1d" });
+    const token = jwt.sign(payload, this.secret_key, { expiresIn: "5d" });
     logger.info("jwt token created");
     return token;
   }
