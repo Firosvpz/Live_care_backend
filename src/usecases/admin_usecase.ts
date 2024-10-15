@@ -12,8 +12,8 @@ class AdminUsecase {
   ) {}
 
   async verifyLogin(email: string, password: string) {
-    const adminEmail = process.env.Admin_Email;
-    const adminPassword = process.env.Admin_Password;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (!adminEmail || !adminPassword) {
       logger.error("can not set env variables");

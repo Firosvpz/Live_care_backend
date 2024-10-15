@@ -11,15 +11,15 @@ class MailService implements IMailService {
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.Email,
-        pass: process.env.Email_Password,
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
       },
     });
     this.validate_config();
   }
 
   private validate_config() {
-    if (!process.env.Email || !process.env.Email_Password) {
+    if (!process.env.EMAIL || !process.env.EMAIL_PASSWORD) {
       logger.error(`Email or Email password in env is not set`);
       throw new Error("Email configuration missing");
     }
@@ -46,7 +46,7 @@ class MailService implements IMailService {
  `;
     try {
       const info = await this.transporter.sendMail({
-        from: process.env.Email,
+        from: process.env.EMAIL,
         to: email,
         subject: "Live-care Verification Code ✔",
         text: `Dear ${name},\n\nYour OTP is: ${otp}\n\nBest regards,\nLive-care`,
