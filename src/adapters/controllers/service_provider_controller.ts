@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs";
 import ProviderSlot from "../../domain/entities/slot";
 import MailService from "../../infrastructure/utils/mail_service";
+
 interface Service {
   value: string;
   label: string;
@@ -272,8 +273,6 @@ class ServiceProviderController {
     }
   }
 
-
-
   async addProviderSlot(req: Request, res: Response, next: NextFunction) {
     try {
       const { date, description, timeFrom, timeTo, title, price, services } =
@@ -337,7 +336,6 @@ class ServiceProviderController {
         limit,
         searchQuery,
       );
-      
       return res.status(200).json({
         success: true,
         data: slots,
@@ -446,7 +444,7 @@ class ServiceProviderController {
     }
   }
 
-  
+
 }
 
 export default ServiceProviderController;

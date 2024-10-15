@@ -133,19 +133,21 @@ class ServiceProviderRepository implements IServiceProviderRepository {
     const savedSlot = await providerSlot.save();
     return savedSlot;
   }
-
   async getDomains(): Promise<Category[] | null> {
     const domainList = await CategoryModel.find({ isListed: true });
     if (!domainList) throw new Error("Domains not found!");
     return domainList;
   }
-
   async getProviderSlots(
     serviceProviderId: string,
     page: number,
     limit: number,
     searchQuery: string,
   ): Promise<{ slots: ProviderSlot[]; total: number }> {
+    if (typeof page !== 'number' || typeof limit !== 'number' || page <= 0 || limit <= 0) {
+      throw new Error("Page and limit must be positive integers.");
+    }
+  
     const pipeline: any[] = [
       {
         $match: { serviceProviderId: serviceProviderId.toString() },
@@ -154,9 +156,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $unwind: "$slots",
       },
     ];
-
-    // console.log(await ProviderSlotModel.aggregate(pipeline));
-
+  
     if (searchQuery) {
       pipeline.push({
         $match: {
@@ -171,7 +171,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         },
       });
     }
-
+  
     pipeline.push(
       {
         $project: {
@@ -184,11 +184,11 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $sort: { date: -1 },
       },
     );
-
+  
     const totalPipeline = [...pipeline, { $count: "total" }];
     const [totalResult] = await ProviderSlotModel.aggregate(totalPipeline);
     const total = totalResult ? totalResult.total : 0;
-
+  
     pipeline.push(
       {
         $skip: (page - 1) * limit,
@@ -197,11 +197,13 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $limit: limit,
       },
     );
-
+  
     const slots = await ProviderSlotModel.aggregate(pipeline);
-
+  
     return { slots, total };
   }
+  
+
 
   async findProviderSlot(slotId: string) {
     return await ProviderSlotModel.findOne({ "slots._id": slotId });

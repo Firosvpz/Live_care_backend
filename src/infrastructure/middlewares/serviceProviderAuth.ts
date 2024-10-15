@@ -49,7 +49,7 @@ const serviceProviderAuth = async (
     }
 
     req.serviceProviderId = serviceProvider?._id;
-    logger.info(`Token verified for service provider ID: ${decodedToken.id}, Path: ${req.path}`);
+    // logger.info(`Token verified for service provider ID: ${decodedToken.id}, Path: ${req.path}`);
     next();
   } catch (error:any) {
     logger.error(`Authentication error: ${error.message}`, { error });

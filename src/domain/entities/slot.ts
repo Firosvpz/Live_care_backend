@@ -1,3 +1,8 @@
+export interface Recurrence {
+  frequency: string;
+  daysOfWeek?: string[]; 
+}
+
 export interface Schedule {
   description: string;
   from: Date;
@@ -6,7 +11,7 @@ export interface Schedule {
   status: "open" | "booked";
   price: number;
   services: string[];
- 
+  recurrence?: Recurrence;
 }
 
 export interface Slot {
