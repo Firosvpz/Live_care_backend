@@ -1,4 +1,3 @@
-import ScheduledBooking from "../../domain/entities/booking";
 
 interface IPaymentRepository {
   bookSlot(data: any): Promise<void | null>;
