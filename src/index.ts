@@ -51,5 +51,5 @@ app.use("/sp", sp_router);
 app.use("/admin", admin_router);
 app.use("/payment", paymentRouter);
 app.listen(PORT, () => {
-  logger.info(`server started on running https://live-care.online`);
+  logger.info(`server started on port https://live-care.online`);
 });
