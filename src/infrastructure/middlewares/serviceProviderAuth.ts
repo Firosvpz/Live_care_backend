@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import ServiceProviderRepository from "../../infrastructure/repositories/sp_respository";
 import { logger } from "../../infrastructure/utils/combine_log";
 import JwtToken from "../../infrastructure/utils/jwt_token";
+if (!process.env.JWT_SECRET_KEY) {
+  throw new Error("JWT_SECRET_KEY is not defined!");
+}
 
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
 const spRepository = new ServiceProviderRepository();
