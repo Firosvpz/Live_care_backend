@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import UserRepository from "../../infrastructure/repositories/user_repository";
 import JwtToken from "../../infrastructure/utils/jwt_token";
 
-const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
+const jwt = new JwtToken('jwt-secret');
 const userRepository = new UserRepository();
 
 // Extending express request object
