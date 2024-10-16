@@ -3,7 +3,9 @@ import ServiceProviderRepository from "../../infrastructure/repositories/sp_resp
 import { logger } from "../../infrastructure/utils/combine_log";
 import JwtToken from "../../infrastructure/utils/jwt_token";
 if (!process.env.JWT_SECRET_KEY) {
+  logger.error("secret key not set in env")
   throw new Error("JWT_SECRET_KEY is not defined!");
+  
 }
 
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
