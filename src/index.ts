@@ -21,7 +21,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: ["https://live-care.online"],
+    origin: ["https://live-care.site"],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   }),
@@ -54,5 +54,5 @@ app.use("/api/sp", sp_router);
 app.use("/api/admin", admin_router);
 app.use("/api/payment", paymentRouter);
 app.listen(PORT, () => {
-  logger.info(`server started on port https://live-care.online`);
+  logger.info(`server started on port https://live-care.site`);
 });
