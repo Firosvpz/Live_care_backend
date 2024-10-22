@@ -37,8 +37,8 @@ class StripePayment {
             quantity: 1,
           },
         ],
-        success_url: `https://live-care.site/user/payment-success`,
-        cancel_url: `https://live-care.site/user/payment-failed`,
+        success_url: `https://localhost:5000/user/payment-success`,
+        cancel_url: `https://localhost:5000/user/payment-failed`,
 
         metadata: {
           serviceProviderId,

@@ -1,8 +1,8 @@
 import UserUsecase from "../../usecases/user_usecase";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
-import path from "path";
-import fs from "fs";
+// import path from "path";
+// import fs from "fs";
 // import { OAuth2Client } from "google-auth-library";
 
 class UserController {
@@ -141,40 +141,39 @@ class UserController {
         blood_type,
         req.body,
       );
-      console.log("files", req.files);
+      // console.log("files", req.files);
 
-      const { profile_picture } = req.files as {
-        [fieldname: string]: Express.Multer.File[];
-      };
+      // const { profile_picture } = req.files as {
+      //   [fieldname: string]: Express.Multer.File[];
+      // };
 
-      if (!profile_picture) {
-        logger.error("All files must be uploaded", 400);
-      }
+      // if (!profile_picture) {
+      //   logger.error("All files must be uploaded", 400);
+      // }
 
       const userDetails = {
         ...req.body,
-        ...req.files,
         _id: req.userId,
       };
 
       const updatedUser = await this.user_usecase.saveUserDetails(userDetails);
       if (updatedUser?.success) {
-        [profile_picture].forEach((files) => {
-          files.forEach((file) => {
-            const filepath = path.join(
-              __dirname,
-              "../../infrastructure/public/images",
-              file.filename,
-            );
-            console.log("filepath", filepath);
+        // [profile_picture].forEach((files) => {
+        //   files.forEach((file) => {
+        //     const filepath = path.join(
+        //       __dirname,
+        //       "../../infrastructure/public/images",
+        //       file.filename,
+        //     );
+        //     console.log("filepath", filepath);
 
-            fs.unlink(filepath, (err) => {
-              if (err) {
-                logger.error("error while deleting files from server ", err);
-              }
-            });
-          });
-        });
+        //     fs.unlink(filepath, (err) => {
+        //       if (err) {
+        //         logger.error("error while deleting files from server ", err);
+        //       }
+        //     });
+        //   });
+        // });
         return res.status(200).json({
           success: true,
           message: "details verified successfully",

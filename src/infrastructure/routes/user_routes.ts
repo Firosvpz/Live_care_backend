@@ -7,8 +7,8 @@ import JwtToken from "../../infrastructure/utils/jwt_token";
 import MailService from "../../infrastructure/utils/mail_service";
 import UserUsecase from "../../usecases/user_usecase";
 import userAuth from "../../infrastructure/middlewares/userAuth";
-import FileStorageService from "../../infrastructure/utils/File_storage";
-import { uploadStorage } from "../../infrastructure/middlewares/multer";
+// import FileStorageService from "../../infrastructure/utils/File_storage";
+// import { uploadStorage } from "../../infrastructure/middlewares/multer";
 import { GoogleAuthService } from "../../infrastructure/utils/googleAuth";
 
 const router = express.Router();
@@ -18,7 +18,7 @@ const otp = new GenerateOtp();
 const hash = new HashPassword();
 const jwt = new JwtToken('jwt-secret');
 const mail = new MailService();
-const fileStorage = new FileStorageService();
+// const fileStorage = new FileStorageService();
 const googleAuthService = new GoogleAuthService();
 
 const userCase = new UserUsecase(
@@ -27,7 +27,7 @@ const userCase = new UserUsecase(
   hash,
   jwt,
   mail,
-  fileStorage,
+  // fileStorage,
   googleAuthService,
 );
 const controller = new UserController(userCase);
@@ -55,7 +55,7 @@ router.post("/google-login", (req, res, next) => {
 router.post(
   "/verify-userdetails",
   userAuth,
-  uploadStorage.fields([{ name: "profile_picture", maxCount: 1 }]),
+  // uploadStorage.fields([{ name: "profile_picture", maxCount: 1 }]),
   (req, res, next) => {
     controller.verifyDetails(req, res, next);
   },
@@ -80,6 +80,10 @@ router.put("/edit-profile", userAuth, (req, res, next) => {
 router.put("/edit-password", userAuth, (req, res, next) => {
   controller.editPassword(req, res, next);
 });
+
+router.get("/public/service-providers", (req, res, next) =>
+  controller.getApprovedAndUnblockedProviders(req, res, next),
+);
 
 router.get("/service-providers", userAuth, (req, res, next) =>
   controller.getApprovedAndUnblockedProviders(req, res, next),
