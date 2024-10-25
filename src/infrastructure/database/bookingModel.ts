@@ -70,6 +70,10 @@ const ScheduledBookingSchema = new Schema<ScheduledBooking>(
       type: Date,
       default: null,
     },
+    prescription: {
+      type: String,
+      default: "",
+    },
     paymentIntentId: { type: String, required: true },
   },
   { timestamps: true },

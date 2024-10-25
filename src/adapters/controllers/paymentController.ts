@@ -4,7 +4,6 @@ import Stripe from "stripe";
 import { v4 as uuidv4 } from "uuid";
 import PaymentUseCase from "../../usecases/paymentUsecase";
 
-
 const stripe = new Stripe(process.env.STRIPE_API_SECRET || "");
 class PaymentController {
   constructor(private paymentCase: PaymentUseCase) {}
@@ -150,11 +149,6 @@ class PaymentController {
       next(error);
     }
   }
-
- 
-
-  
 }
-
 
 export default PaymentController;

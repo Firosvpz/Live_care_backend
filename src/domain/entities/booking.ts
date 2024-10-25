@@ -17,6 +17,7 @@ interface ScheduledBooking {
   paymentIntentId: string;
   EmergencyLeaveReason?: string;
   EmergencyLeaveDate?: Date;
+  prescription?: string;
 }
 
 interface User {

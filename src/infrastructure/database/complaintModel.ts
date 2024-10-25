@@ -22,5 +22,5 @@ const ComplaintSchema: Schema = new Schema({
 
 export const Complaint = mongoose.model<IComplaint>(
   "Complaint",
-  ComplaintSchema
+  ComplaintSchema,
 );

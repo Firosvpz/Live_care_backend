@@ -33,6 +33,7 @@
     "nodemailer": "^6.9.14",
     "react-toastify": "^10.0.5",
     "rrule": "^2.8.1",
+    "socket.io": "^4.8.0",
     "ts-node": "^10.9.2",
     "validators": "^0.3.1",
     "winston": "^3.14.2",

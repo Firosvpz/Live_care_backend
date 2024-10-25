@@ -10,7 +10,8 @@ import { CategoryModel } from "../../infrastructure/database/categoryModel";
 import ScheduledBooking from "../../domain/entities/booking";
 import { ScheduledBookingModel } from "../../infrastructure/database/bookingModel";
 import users from "../../infrastructure/database/user_model";
-import { IReview } from '../../domain/entities/service_provider';
+import { IReview } from "../../domain/entities/service_provider";
+import IUser from "../../domain/entities/user";
 
 class ServiceProviderRepository implements IServiceProviderRepository {
   async findByEmail(email: string): Promise<IService_provider | null> {
@@ -80,13 +81,16 @@ class ServiceProviderRepository implements IServiceProviderRepository {
   async saveProviderSlot(slotData: ProviderSlot): Promise<ProviderSlot | null> {
     const { serviceProviderId, slots } = slotData;
 
-    const transformData = (data: any[], serviceProviderId: string): ProviderSlot => {
+    const transformData = (
+      data: any[],
+      serviceProviderId: string,
+    ): ProviderSlot => {
       const slots: Slot[] = data.map((item) => ({
         date: new Date(item.date),
         schedule: item.schedule.map((scheduleItem: Schedule) => ({
           description: scheduleItem.description,
           from: new Date(scheduleItem.from), // Ensure conversion to Date
-          to: new Date(scheduleItem.to),     // Ensure conversion to Date
+          to: new Date(scheduleItem.to), // Ensure conversion to Date
           title: scheduleItem.title,
           status: scheduleItem.status as "open" | "booked",
           price: Number(scheduleItem.price),
@@ -108,7 +112,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
             slot.date?.toString().split("T")[0] ===
             newSlot.date?.toString().split("T")[0], // Same date
         );
-      
+
         if (existingSlotIndex === -1) {
           providerSlot?.slots.push(newSlot); // No conflict, add the new slot
         } else {
@@ -118,21 +122,26 @@ class ServiceProviderRepository implements IServiceProviderRepository {
             ].schedule.findIndex(
               (s) => newSchedule.from < s.to && newSchedule.to > s.from, // Check for overlap
             );
-      
+
             if (existingScheduleIndex !== -1) {
-              throw new Error("Time slot already taken");
-            } else {
               providerSlot!.slots[existingSlotIndex].schedule.push(newSchedule);
+            } else {
+              throw new Error("Time slot already taken");
+
+              providerSlot!.slots[existingSlotIndex].schedule[
+                existingScheduleIndex!
+              ] = newSchedule;
             }
           });
         }
       });
-    }      
+    }
 
     // Save updated provider slot document
     const savedSlot = await providerSlot.save();
     return savedSlot;
   }
+
   async getDomains(): Promise<Category[] | null> {
     const domainList = await CategoryModel.find({ isListed: true });
     if (!domainList) throw new Error("Domains not found!");
@@ -144,10 +153,15 @@ class ServiceProviderRepository implements IServiceProviderRepository {
     limit: number,
     searchQuery: string,
   ): Promise<{ slots: ProviderSlot[]; total: number }> {
-    if (typeof page !== 'number' || typeof limit !== 'number' || page <= 0 || limit <= 0) {
+    if (
+      typeof page !== "number" ||
+      typeof limit !== "number" ||
+      page <= 0 ||
+      limit <= 0
+    ) {
       throw new Error("Page and limit must be positive integers.");
     }
-  
+
     const pipeline: any[] = [
       {
         $match: { serviceProviderId: serviceProviderId.toString() },
@@ -156,7 +170,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $unwind: "$slots",
       },
     ];
-  
+
     if (searchQuery) {
       pipeline.push({
         $match: {
@@ -171,7 +185,7 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         },
       });
     }
-  
+
     pipeline.push(
       {
         $project: {
@@ -184,11 +198,11 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $sort: { date: -1 },
       },
     );
-  
+
     const totalPipeline = [...pipeline, { $count: "total" }];
     const [totalResult] = await ProviderSlotModel.aggregate(totalPipeline);
     const total = totalResult ? totalResult.total : 0;
-  
+
     pipeline.push(
       {
         $skip: (page - 1) * limit,
@@ -197,13 +211,11 @@ class ServiceProviderRepository implements IServiceProviderRepository {
         $limit: limit,
       },
     );
-  
+
     const slots = await ProviderSlotModel.aggregate(pipeline);
-  
+
     return { slots, total };
   }
-  
-
 
   async findProviderSlot(slotId: string) {
     return await ProviderSlotModel.findOne({ "slots._id": slotId });
@@ -230,15 +242,35 @@ class ServiceProviderRepository implements IServiceProviderRepository {
     return { bookings: list, total };
   }
 
-  async updateStatus(bookingId: string, status: string) {
-    console.log("hi", bookingId, status);
+  async updateStatus(bookingId: string, status: string, prescription: string) {
+    console.log("hi", bookingId, status, prescription);
 
-    return await ScheduledBookingModel.findByIdAndUpdate(
+    const updatedBooking = await ScheduledBookingModel.findByIdAndUpdate(
       bookingId,
-      { status },
-      { new: true }, // Return the updated document
+      { status, prescription },
+      { new: true },
     );
+
+    if (!updatedBooking) {
+      throw new Error("Booking not found");
+    }
+
+    // Fetch the user details based on the userId from the booking
+    const user = await users.findById(updatedBooking.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Return the updated booking and user details (name and email)
+    return {
+      booking: updatedBooking,
+      user: {
+        name: user.name,
+        email: user.email,
+      },
+    };
   }
+
   async findBookingById(bookingId: string): Promise<any> {
     console.log("Inside findBookingById:", bookingId);
 
@@ -274,10 +306,30 @@ class ServiceProviderRepository implements IServiceProviderRepository {
     };
   }
 
-  
   async getReviews(providerId: string): Promise<IReview[]> {
-    const provider = await service_provider.findById(providerId).populate("reviews.user");
+    const provider = await service_provider
+      .findById(providerId)
+      .populate("reviews.user");
     return provider?.reviews || [];
+  }
+
+  async getUserRecordings(userId: string): Promise<IUser> {
+    const userDetails = await users.findById(userId);
+    if (!userDetails) {
+      throw new Error("User not found");
+    }
+    return userDetails;
+  }
+
+  async deleteSlot(serviceProviderId: string, slotId: string): Promise<void> {
+    const result = await ProviderSlotModel.updateOne(
+      { serviceProviderId },
+      { $pull: { slots: { _id: slotId } } },
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error("Slot not found or already deleted.");
+    }
   }
 }
 export default ServiceProviderRepository;

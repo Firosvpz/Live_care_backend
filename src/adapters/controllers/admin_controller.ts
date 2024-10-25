@@ -345,7 +345,7 @@ class AdminController {
 
       const response = await this.admin_usecase.respondToComplaint(
         id,
-        responseMessage
+        responseMessage,
       );
 
       if (response) {
@@ -361,7 +361,5 @@ class AdminController {
       next(error);
     }
   }
-
-
 }
 export default AdminController;

@@ -4,7 +4,7 @@ import { logger } from "../utils/combine_log";
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI as string
+    const mongoURI = process.env.MONGO_URI as string;
     await mongoose.connect(mongoURI);
     logger.info("Mongodb connected successfully");
   } catch (error) {

@@ -15,10 +15,7 @@ class MailService implements IMailService {
         pass: process.env.Email_Password,
       },
     });
-    
   }
-
- 
 
   async sendMail(name: string, email: string, otp: string): Promise<void> {
     const email_content = `
@@ -82,7 +79,7 @@ class MailService implements IMailService {
                 
                 <hr style="border: 0; height: 1px; background: #ccc; margin-top: 20px;">
                 
-                <p style="color: #777; font-size: 0.8em;">This is an automated email, please do not reply. If you need assistance, contact our support at <a href="mailto:support@weone.com" style="color: #4CAF50;">support@weone.com</a>.</p>
+                <p style="color: #777; font-size: 0.8em;">This is an automated email, please do not reply. If you need assistance, contact our support at <a href="mailto:support@live-care.com" style="color: #4CAF50;">support@live-care.com</a>.</p>
                 <p style="color: #777; font-size: 0.8em;">&copy; 2024 WeOne Maternity Care. All rights reserved.</p>
             </div>
         </div>
@@ -92,6 +89,48 @@ class MailService implements IMailService {
       from: process.env.EMAIL,
       to: email,
       subject: "Booking Cancellation Notice - Live care",
+      html: emailContent,
+    });
+  }
+
+  async sendPrescriptionMail(
+    name: string,
+    email: string,
+    prescription: string,
+  ): Promise<void> {
+    const emailContent = `
+        <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; background-color: #f9f9f9; padding: 20px; border-radius: 8px;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+                <h2 style="color: #4CAF50; text-align: center;">Your Prescription from LiveCare</h2>
+                <p>Dear <strong>${name}</strong>,</p>
+                <p>We hope this message finds you well. Please find your prescription details below as provided by your healthcare provider:</p>
+                
+                <div style="margin: 20px 0;">
+                    <h3 style="color: #4CAF50;">Prescription Details</h3>
+                    <div style="background-color: #f2f2f2; padding: 15px; border-radius: 8px;">
+                      <p>${prescription}</p>
+                    </div>
+                </div>
+  
+                <p>If you have any questions or need further clarification regarding your prescription, we recommend reaching out directly to your healthcare provider for more information. You can also reply to this email or contact our support team if you need assistance with this service.</p>
+                
+                <p style="font-weight: bold;">Thank you for trusting LiveCare with your health.</p>
+                
+                <p>Best regards,<br/> 
+                <strong>LiveCare Team</strong></p>
+                
+                <hr style="border: 0; height: 1px; background: #ccc; margin-top: 20px;">
+                
+                <p style="color: #777; font-size: 0.8em;">This is an automated email, please do not reply. If you need assistance, contact our support at <a href="mailto:support@live-care.com" style="color: #4CAF50;">support@live-care.com</a>.</p>
+                <p style="color: #777; font-size: 0.8em;">&copy; 2024 LiveCare Health Services. All rights reserved.</p>
+            </div>
+        </div>
+    `;
+
+    await this.transporter.sendMail({
+      from: process.env.EMAIL,
+      to: email,
+      subject: "Your Prescription from LiveCare",
       html: emailContent,
     });
   }

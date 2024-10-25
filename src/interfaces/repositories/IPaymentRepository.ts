@@ -1,4 +1,3 @@
-
 interface IPaymentRepository {
   bookSlot(data: any): Promise<void | null>;
 

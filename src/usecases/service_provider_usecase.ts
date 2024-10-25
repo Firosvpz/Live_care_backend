@@ -7,8 +7,7 @@ import IFileStorageService from "../interfaces/utils/IFile_storage_service";
 import { logger } from "../infrastructure/utils/combine_log";
 import IService_provider from "../domain/entities/service_provider";
 import { CategoryModel } from "../infrastructure/database/categoryModel";
-import ProviderSlot from '../domain/entities/slot';
-
+import ProviderSlot from "../domain/entities/slot";
 
 // type DecodedToken = {
 //   info: { userId: string };
@@ -219,26 +218,22 @@ class ServiceProviderUsecase {
     ) {
       throw new Error("Invalid slot data");
     }
-    const slotAdded = await this.spRepository.saveProviderSlot(
-      slotData
-    );
+    const slotAdded = await this.spRepository.saveProviderSlot(slotData);
     return slotAdded;
   }
 
-  
   async getProviderSlots(
     serviceProviderId: string,
     page: number,
     limit: number,
-    searchQuery: string
+    searchQuery: string,
   ) {
-    const { slots, total } =
-      await this.spRepository.getProviderSlots(
-        serviceProviderId,
-        page,
-        limit,
-        searchQuery
-      );
+    const { slots, total } = await this.spRepository.getProviderSlots(
+      serviceProviderId,
+      page,
+      limit,
+      searchQuery,
+    );
     return { slots, total };
   }
 
@@ -247,63 +242,70 @@ class ServiceProviderUsecase {
     return domainList;
   }
 
-  
   async editSlot(slotId: string, updatedSlotData: any) {
     const providerSlot = await this.spRepository.findProviderSlot(slotId);
-  
+
     if (!providerSlot) {
-      throw new Error('Slot not found in any provider');
+      throw new Error("Slot not found in any provider");
     }
-  
-    const slotIndex = providerSlot.slots.findIndex((s: any) => s._id.toString() === slotId);
-  
+
+    const slotIndex = providerSlot.slots.findIndex(
+      (s: any) => s._id.toString() === slotId,
+    );
+
     if (slotIndex === -1) {
-      throw new Error('Slot not found');
+      throw new Error("Slot not found");
     }
-  
-    const newFrom = new Date(updatedSlotData.from);
-    const newTo = new Date(updatedSlotData.to);
-    const slotDate = newFrom.toISOString().split('T')[0];
-  
-    const isDuplicateTimeOnSameDay = providerSlot.slots.some((slot: any, index: number) => {
-      if (index !== slotIndex) {
-        return slot.schedule.some((schedule: any) => {
-          const existingFrom = new Date(schedule.from);
-          const existingTo = new Date(schedule.to);
-          const existingDate = existingFrom.toISOString().split('T')[0];
-      console.log('from',existingFrom);
-      console.log('to',existingFrom);
-      
-          if (existingDate === slotDate) {
-            const isOverlapping =
-              (newFrom <= existingTo && newTo >= existingFrom) || 
-              (newFrom >= existingFrom && newFrom < existingTo) || 
-              (newTo > existingFrom && newTo <= existingTo) ||   
-              (newFrom <= existingFrom && newTo >= existingTo);    
-            return isOverlapping;
-          }
-  
-          return false;
-        });
-      }
-      return false;
-    });
-  
-    if (isDuplicateTimeOnSameDay) {
-      throw new Error("Slot time already exists on the same date",);
-    }
-  
+
     const updatedSlot = providerSlot.slots[slotIndex];
+
+    const newFrom = updatedSlotData.from
+      ? new Date(updatedSlotData.from)
+      : new Date(updatedSlot.schedule[0].from);
+    const newTo = updatedSlotData.to
+      ? new Date(updatedSlotData.to)
+      : new Date(updatedSlot.schedule[0].to);
+    const slotDate = newFrom.toISOString().split("T")[0];
+
+    const isDuplicateTimeOnSameDay = providerSlot.slots.some(
+      (slot: any, index: number) => {
+        if (index !== slotIndex) {
+          return slot.schedule.some((schedule: any) => {
+            const existingFrom = new Date(schedule.from);
+            const existingTo = new Date(schedule.to);
+            const existingDate = existingFrom.toISOString().split("T")[0];
+
+            if (existingDate === slotDate) {
+              const isOverlapping =
+                (newFrom <= existingTo && newTo >= existingFrom) ||
+                (newFrom >= existingFrom && newFrom < existingTo) ||
+                (newTo > existingFrom && newTo <= existingTo) ||
+                (newFrom <= existingFrom && newTo >= existingTo);
+              return isOverlapping;
+            }
+
+            return false;
+          });
+        }
+        return false;
+      },
+    );
+
+    if (isDuplicateTimeOnSameDay) {
+      throw new Error("Slot time already exists on the same date");
+    }
+
     updatedSlot.schedule.forEach((schedule: any) => {
       schedule.from = updatedSlotData.from || schedule.from;
       schedule.to = updatedSlotData.to || schedule.to;
       schedule.price = updatedSlotData.price || schedule.price;
       schedule.services = updatedSlotData.services || schedule.services;
-      schedule.description = updatedSlotData.description || schedule.description;
+      schedule.description =
+        updatedSlotData.description || schedule.description;
       schedule.status = updatedSlotData.status || schedule.status;
     });
-    console.log('updated',updatedSlot);
-    
+    console.log("updated", updatedSlot);
+
     await this.spRepository.saveProviderSlot(providerSlot);
     return updatedSlot;
   }
@@ -311,18 +313,21 @@ class ServiceProviderUsecase {
   async getScheduledBookings(
     serviceProviderId: string,
     page: number,
-    limit: number
+    limit: number,
   ) {
-    const { bookings, total } =
-      await this.spRepository.getScheduledBookings(
-        serviceProviderId,
-        page,
-        limit
-      );
+    const { bookings, total } = await this.spRepository.getScheduledBookings(
+      serviceProviderId,
+      page,
+      limit,
+    );
     return { bookings, total };
   }
 
-  async updateBookingStatus(bookingId: string, status: string) {
+  async updateBookingStatus(
+    bookingId: string,
+    status: string,
+    prescription: string,
+  ) {
     const validStatuses = ["Scheduled", "Completed", "Cancelled"];
     if (!validStatuses.includes(status)) {
       throw new Error("Invalid status");
@@ -330,7 +335,8 @@ class ServiceProviderUsecase {
 
     return await this.spRepository.updateStatus(
       bookingId,
-      status
+      status,
+      prescription,
     );
   }
   async cancelBookingUseCase(bookingId: string, cancelReason: string) {
@@ -339,9 +345,7 @@ class ServiceProviderUsecase {
     try {
       console.log("Fetching booking by ID:", bookingId);
 
-      const booking = await this.spRepository.findBookingById(
-        bookingId
-      );
+      const booking = await this.spRepository.findBookingById(bookingId);
       if (!booking) {
         console.log("Booking not found");
         throw new Error("Booking not found");
@@ -349,11 +353,10 @@ class ServiceProviderUsecase {
 
       console.log("Booking found:", booking);
 
-      const cancelledBooking =
-        await this.spRepository.cancelBooking(
-          bookingId,
-          cancelReason
-        );
+      const cancelledBooking = await this.spRepository.cancelBooking(
+        bookingId,
+        cancelReason,
+      );
       console.log("Booking cancelled:", cancelledBooking);
       return cancelledBooking;
     } catch (error) {
@@ -362,8 +365,14 @@ class ServiceProviderUsecase {
     }
   }
 
+  async getUserDetails(userId: string) {
+    const userDetails = await this.spRepository.getUserRecordings(userId);
+    return userDetails;
+  }
+
+  async deletSLot(serviceProviderId: string, slotId: string): Promise<void> {
+    await this.spRepository.deleteSlot(serviceProviderId, slotId);
+  }
 }
-
-
 
 export default ServiceProviderUsecase;

@@ -1,6 +1,6 @@
 export interface Recurrence {
   frequency: string;
-  daysOfWeek?: string[]; 
+  daysOfWeek?: string[];
 }
 
 export interface Schedule {
@@ -17,7 +17,6 @@ export interface Schedule {
 export interface Slot {
   date: Date;
   schedule: Schedule[];
- 
 }
 
 interface ProviderSlot {

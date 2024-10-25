@@ -6,10 +6,10 @@ import IMailService from "../interfaces/utils/IMail_service";
 import IUser from "../domain/entities/user";
 import { logger } from "../infrastructure/utils/combine_log";
 import IService_provider from "../domain/entities/service_provider";
-// import IFileStorageService from "../interfaces/utils/IFile_storage_service";
+import IFileStorageService from "../interfaces/utils/IFile_storage_service";
 import IGoogleAuthService from "../interfaces/utils/IGoogleAuth";
-import { IComplaint } from '../infrastructure/database/complaintModel';
-import { IReview } from '../domain/entities/service_provider';
+import { IComplaint } from "../infrastructure/database/complaintModel";
+import { IReview } from "../domain/entities/service_provider";
 
 // type DecodedToken = {
 //   info: { userId: string };
@@ -25,7 +25,7 @@ class UserUsecase {
     private hashPassword: IHashPassword,
     private jwtToken: IJwtToken,
     private mailService: IMailService,
-    // private fileStorage: IFileStorageService,
+    private fileStorage: IFileStorageService,
     private googleAuthService: IGoogleAuthService,
   ) {}
 
@@ -231,7 +231,7 @@ class UserUsecase {
   }
 
   async saveUserDetails(userDetails: IUser) {
-    const { _id,} = userDetails;
+    const { _id, profile_picture } = userDetails;
 
     const user = await this.userRepository.findUserById(_id as string);
 
@@ -239,13 +239,13 @@ class UserUsecase {
       logger.error("service provider not found", 404);
       return;
     }
-    // const profilePictureUrl = await this.fileStorage.uploadFile(
-    //   profile_picture,
-    //   "profile_picture",
-    // );
-    // console.log("pic:", profilePictureUrl);
+    const profilePictureUrl = await this.fileStorage.uploadFile(
+      profile_picture,
+      "profile_picture",
+    );
+    console.log("pic:", profilePictureUrl);
 
-    // userDetails.profile_picture = profilePictureUrl;
+    userDetails.profile_picture = profilePictureUrl;
     userDetails.hasCompletedDetails = true;
 
     const updatedUser = await this.userRepository.saveUserDetails(userDetails);
@@ -317,7 +317,7 @@ class UserUsecase {
     }
   }
 
-  async fileComplaint(complaint:  Partial<IComplaint>): Promise<IComplaint> {
+  async fileComplaint(complaint: Partial<IComplaint>): Promise<IComplaint> {
     return this.userRepository.createComplaint(complaint);
   }
 
@@ -325,9 +325,14 @@ class UserUsecase {
     return this.userRepository.getComplaintsByUser(userId);
   }
 
-  async addReview(providerId: string, userId: string, rating: number, comment: string) {
+  async addReview(
+    providerId: string,
+    userId: string,
+    rating: number,
+    comment: string,
+  ) {
     // console.log('user:',userId,'rating:',rating,"comment:",comment);
-    
+
     const review: IReview = {
       userId,
       rating,
@@ -336,7 +341,6 @@ class UserUsecase {
     };
     return this.userRepository.addReview(providerId, review);
   }
-
 }
 
 export default UserUsecase;

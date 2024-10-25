@@ -7,8 +7,8 @@ import JwtToken from "../../infrastructure/utils/jwt_token";
 import MailService from "../../infrastructure/utils/mail_service";
 import UserUsecase from "../../usecases/user_usecase";
 import userAuth from "../../infrastructure/middlewares/userAuth";
-// import FileStorageService from "../../infrastructure/utils/File_storage";
-// import { uploadStorage } from "../../infrastructure/middlewares/multer";
+import FileStorageService from "../../infrastructure/utils/File_storage";
+import { uploadStorage } from "../../infrastructure/middlewares/multer";
 import { GoogleAuthService } from "../../infrastructure/utils/googleAuth";
 
 const router = express.Router();
@@ -16,9 +16,9 @@ const router = express.Router();
 const userRepository = new UserRepository();
 const otp = new GenerateOtp();
 const hash = new HashPassword();
-const jwt = new JwtToken('jwt-secret');
+const jwt = new JwtToken("jwt-secret");
 const mail = new MailService();
-// const fileStorage = new FileStorageService();
+const fileStorage = new FileStorageService();
 const googleAuthService = new GoogleAuthService();
 
 const userCase = new UserUsecase(
@@ -27,7 +27,7 @@ const userCase = new UserUsecase(
   hash,
   jwt,
   mail,
-  // fileStorage,
+  fileStorage,
   googleAuthService,
 );
 const controller = new UserController(userCase);
@@ -55,12 +55,11 @@ router.post("/google-login", (req, res, next) => {
 router.post(
   "/verify-userdetails",
   userAuth,
-  // uploadStorage.fields([{ name: "profile_picture", maxCount: 1 }]),
+  uploadStorage.fields([{ name: "profile_picture", maxCount: 1 }]),
   (req, res, next) => {
     controller.verifyDetails(req, res, next);
   },
 );
-
 router.get("/user-home", userAuth, (req, res, next) => {
   controller.home(req, res, next);
 });
@@ -106,13 +105,13 @@ router.get("/get-bookings", userAuth, (req, res, next) =>
 );
 
 router.post("/complaints", userAuth, (req, res) =>
-  controller.fileComplaint(req, res)
+  controller.fileComplaint(req, res),
 );
 router.get("/complaints/:userId", userAuth, (req, res) =>
-  controller.getUserComplaints(req, res)
+  controller.getUserComplaints(req, res),
 );
-router.post("/add-review",userAuth, (req, res) =>
-  controller.addReview(req, res)
+router.post("/add-review", userAuth, (req, res) =>
+  controller.addReview(req, res),
 );
 
 export default router;

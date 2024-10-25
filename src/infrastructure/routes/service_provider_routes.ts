@@ -10,7 +10,7 @@ import JwtToken from "../../infrastructure/utils/jwt_token";
 import MailService from "../../infrastructure/utils/mail_service";
 import ServiceProviderUsecase from "../../usecases/service_provider_usecase";
 
-const serviceProvider = express.Router()
+const serviceProvider = express.Router();
 const otp = new GenerateOtp();
 const hash = new HashPassword();
 const jwt = new JwtToken(process.env.JWT_SECRET_KEY as string);
@@ -114,5 +114,17 @@ serviceProvider.post(
   spController.emergencycancelBooking,
 );
 
+serviceProvider.get(
+  "/recordings/:userId",
+  serviceProviderAuth,
+  (req, res, next) => {
+    spController.getUserPreviousRecordings(req, res, next);
+  },
+);
+
+serviceProvider.delete(
+  "/providers/:serviceProviderId/slots/:slotId",
+  (req, res) => spController.deleteSlot(req, res),
+);
 
 export default serviceProvider;

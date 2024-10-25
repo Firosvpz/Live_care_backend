@@ -2,8 +2,8 @@ import IUser from "../../domain/entities/user";
 import IService_provider from "../../domain/entities/service_provider";
 import { IBlog } from "../../domain/entities/blogs";
 import ScheduledBooking from "../../domain/entities/booking";
-import { IComplaint } from '../../infrastructure/database/complaintModel';
-import { IReview } from '../../domain/entities/service_provider';
+import { IComplaint } from "../../infrastructure/database/complaintModel";
+import { IReview } from "../../domain/entities/service_provider";
 
 interface IUserRepository {
   findUserByEmail(email: string): Promise<IUser | null>;
@@ -30,8 +30,11 @@ interface IUserRepository {
   getProviderSlotDetails(serviceProviderId: string): Promise<any>;
   findUserByGoogleId(googleId: string): Promise<any>;
   createUser(userData: any): Promise<any>;
-  createComplaint(complaint:  Partial<IComplaint>): Promise<IComplaint>;
+  createComplaint(complaint: Partial<IComplaint>): Promise<IComplaint>;
   getComplaintsByUser(userId: string): Promise<IComplaint[]>;
-  addReview(providerId: string, review: IReview): Promise<IService_provider | null>
+  addReview(
+    providerId: string,
+    review: IReview,
+  ): Promise<IService_provider | null>;
 }
 export default IUserRepository;

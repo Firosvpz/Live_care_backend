@@ -281,11 +281,11 @@ class ServiceProviderController {
         (option: Service) => option.value,
       );
       const serviceProviderId = req.serviceProviderId;
-  
+
       if (!serviceProviderId) {
         throw new Error("Unauthorized user");
       }
-  
+
       const slotData: ProviderSlot = {
         serviceProviderId,
         slots: [
@@ -295,7 +295,7 @@ class ServiceProviderController {
               {
                 description,
                 from: new Date(timeFrom), // Ensure timeFrom is a Date
-                to: new Date(timeTo),     // Ensure timeTo is a Date
+                to: new Date(timeTo), // Ensure timeTo is a Date
                 title,
                 status: "open",
                 price,
@@ -305,7 +305,7 @@ class ServiceProviderController {
           },
         ],
       };
-  
+
       const slotAdded = await this.spUsecase.addSlot(slotData);
       return res.status(201).json({
         success: true,
@@ -397,12 +397,22 @@ class ServiceProviderController {
   async updateBookingStatus(req: Request, res: Response, next: NextFunction) {
     try {
       const { bookingId } = req.params;
-      const { status } = req.body;
-      console.log("Request:", bookingId, status);
+      const { status, prescription } = req.body;
+      console.log("Request:", bookingId, status, prescription);
       const updatedBooking = await this.spUsecase.updateBookingStatus(
         bookingId,
         status,
+        prescription,
       );
+      console.log("update", updatedBooking);
+
+      const mailService = new MailService();
+      await mailService.sendPrescriptionMail(
+        updatedBooking.user.name,
+        updatedBooking.user.email,
+        prescription,
+      );
+
       if (!updatedBooking) {
         return res.status(404).json({ message: "Booking not found" });
       }
@@ -427,6 +437,7 @@ class ServiceProviderController {
         bookingId,
         cancelReason,
       );
+      console.log("resu", result);
 
       const mailService = new MailService();
       await mailService.sendLeaveMail(
@@ -444,7 +455,46 @@ class ServiceProviderController {
     }
   }
 
+  async getUserPreviousRecordings(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      console.log("body");
 
+      const { userId } = req.params;
+      console.log("user", userId);
+      const userDetails = await this.spUsecase.getUserDetails(userId);
+      return res.status(200).json({
+        success: true,
+        data: userDetails,
+        message: "User details fetched",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async deleteSlot(req: Request, res: Response): Promise<void> {
+    const { serviceProviderId, slotId } = req.params;
+
+    try {
+      await this.spUsecase.deletSLot(serviceProviderId, slotId);
+
+      // Send success response with data
+      res.status(200).json({
+        success: true,
+        message: "Slot deleted successfully",
+      });
+    } catch (error: any) {
+      logger.error(`Error deleting slot: ${error.message}`);
+      res.status(400).json({
+        success: false,
+        message: error.message || "Failed to delete slot",
+      });
+    }
+  }
 }
 
 export default ServiceProviderController;

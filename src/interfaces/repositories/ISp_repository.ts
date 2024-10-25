@@ -2,6 +2,7 @@ import IService_provider from "../../domain/entities/service_provider";
 import ProviderSlot from "../../domain/entities/slot";
 import Category from "../../domain/entities/category";
 import ScheduledBooking from "../../domain/entities/booking";
+import IUser from "../../domain/entities/user";
 
 interface IServiceProviderRepository {
   findByEmail(email: string): Promise<IService_provider | null>;
@@ -34,10 +35,15 @@ interface IServiceProviderRepository {
     page: number,
     limit: number,
   ): Promise<{ bookings: ScheduledBooking[]; total: number }>;
-  updateStatus(bookingId: string, status: string): Promise<any>;
+  updateStatus(
+    bookingId: string,
+    status: string,
+    prescription: string,
+  ): Promise<any>;
   findBookingById(bookingId: string): Promise<any>;
   cancelBooking(bookingId: string, cancelReason: string): Promise<any>;
- 
+  getUserRecordings(userId: string): Promise<IUser>;
+  deleteSlot(serviceProviderId: string, slotId: string): Promise<void>;
 }
 
 export default IServiceProviderRepository;

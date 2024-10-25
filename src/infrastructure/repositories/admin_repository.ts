@@ -279,7 +279,7 @@ class AdminRepository implements IAdminRepository {
 
   async respondToComplaint(
     id: string,
-    responseMessage: string
+    responseMessage: string,
   ): Promise<boolean> {
     try {
       const complaint = await Complaint.findById(id).sort({ createdAt: -1 });
@@ -298,8 +298,6 @@ class AdminRepository implements IAdminRepository {
       return false;
     }
   }
-
- 
 }
 
 export default AdminRepository;

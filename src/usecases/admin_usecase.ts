@@ -151,7 +151,7 @@ class AdminUsecase {
 
   async respondToComplaint(
     id: string,
-    responseMessage: string
+    responseMessage: string,
   ): Promise<boolean> {
     return this.adminRepository.respondToComplaint(id, responseMessage);
   }

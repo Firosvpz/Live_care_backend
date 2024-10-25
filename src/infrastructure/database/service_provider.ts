@@ -72,7 +72,7 @@ const Service_provider_schema: Schema<IService_provider> = new Schema(
     },
     reviews: [
       {
-        userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+        userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
         userName: { type: String, required: false },
         rating: { type: Number, required: true },
         comment: { type: String, required: true },
