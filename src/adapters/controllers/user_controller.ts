@@ -1,8 +1,8 @@
 import UserUsecase from "../../usecases/user_usecase";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
-import path from "path";
-import fs from "fs";
+// import path from "path";
+// import fs from "fs";
 // import { OAuth2Client } from "google-auth-library";
 
 class UserController {
@@ -157,22 +157,6 @@ class UserController {
 
       const updatedUser = await this.user_usecase.saveUserDetails(userDetails);
       if (updatedUser?.success) {
-        [profile_picture].forEach((files) => {
-          files.forEach((file) => {
-            const filepath = path.join(
-              __dirname,
-              "../../infrastructure/public/images",
-              file.filename,
-            );
-            console.log("filepath", filepath);
-
-            fs.unlink(filepath, (err) => {
-              if (err) {
-                logger.error("error while deleting files from server ", err);
-              }
-            });
-          });
-        });
         return res.status(200).json({
           success: true,
           message: "details verified successfully",
