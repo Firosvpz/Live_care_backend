@@ -1,7 +1,7 @@
 import UserUsecase from "../../usecases/user_usecase";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
-// import path from "path";
+import path from "path";
 // import fs from "fs";
 // import { OAuth2Client } from "google-auth-library";
 
@@ -83,12 +83,13 @@ class UserController {
 
   async verifyLogin(req: Request, res: Response, next: NextFunction) {
     try {
+      
       const { email, password, idToken } = req.body;
       let user;
 
       if (idToken) {
-        console.log("idtoken", idToken);
-
+        console.log('idtoken',idToken);
+        
         user = await this.user_usecase.googleLogin(idToken);
         console.log("user", user);
 
@@ -157,6 +158,22 @@ class UserController {
 
       const updatedUser = await this.user_usecase.saveUserDetails(userDetails);
       if (updatedUser?.success) {
+        [profile_picture].forEach((files) => {
+          files.forEach((file) => {
+            const filepath = path.join(
+              __dirname,
+              "../../infrastructure/public/images",
+              file.filename,
+            );
+            console.log("filepath", filepath);
+
+            // fs.unlink(filepath, (err) => {
+            //   if (err) {
+            //     logger.error("error while deleting files from server ", err);
+            //   }
+            // });
+          });
+        });
         return res.status(200).json({
           success: true,
           message: "details verified successfully",
@@ -169,7 +186,7 @@ class UserController {
       next(error);
     }
   }
-
+  
   async logout(req: Request, res: Response, next: NextFunction) {
     console.log("User logging out");
     try {
@@ -391,7 +408,7 @@ class UserController {
   }
 
   async addReview(req: Request, res: Response) {
-    console.log("pro", req.body);
+    console.log('pro',req.body);
     const { providerId, rating, comment } = req.body;
     const userId = req.userId;
     if (!userId) {
@@ -399,17 +416,13 @@ class UserController {
     }
 
     try {
-      const updatedProvider = await this.user_usecase.addReview(
-        providerId,
-        userId,
-        rating,
-        comment,
-      );
+      const updatedProvider = await this.user_usecase.addReview(providerId, userId, rating, comment);
       res.status(200).json(updatedProvider);
-    } catch (error: any) {
+    } catch (error:any) {
       res.status(500).json({ message: error.message });
     }
   }
+
 }
 
 export default UserController;

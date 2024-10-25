@@ -1,7 +1,7 @@
 import ServiceProviderUsecase from "../../usecases/service_provider_usecase";
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../../infrastructure/utils/combine_log";
-// import path from "path";
+import path from "path";
 // import fs from "fs";
 import ProviderSlot from "../../domain/entities/slot";
 import MailService from "../../infrastructure/utils/mail_service";
@@ -135,7 +135,6 @@ class ServiceProviderController {
     }
   }
 
-  
   async verifyDetails(req: Request, res: Response, next: NextFunction) {
     try {
       const {
@@ -159,25 +158,41 @@ class ServiceProviderController {
         req.body,
       );
       console.log("files", req.files);
-  
+
       const { profile_picture, experience_crt } = req.files as {
         [fieldname: string]: Express.Multer.File[];
       };
-  
+
       if (!profile_picture || !experience_crt) {
         logger.error("All files must be uploaded", 400);
       }
-  
+
       const serviceProviderDetails = {
         ...req.body,
         ...req.files,
         _id: req.serviceProviderId,
       };
-  
+      // const serviceProviderId = req.serviceProviderId
+
       const updatedServiceProvider =
         await this.spUsecase.saveServiceProviderDetails(serviceProviderDetails);
-  
       if (updatedServiceProvider?.success) {
+        [profile_picture, experience_crt].forEach((files) => {
+          files.forEach((file) => {
+            const filepath = path.join(
+              __dirname,
+              "../../infrastructure/public/images",
+              file.filename,
+            );
+            console.log("filepath", filepath);
+
+            // fs.unlink(filepath, (err) => {
+            //   if (err) {
+            //     logger.error("error while deleting files from server ", err);
+            //   }
+            // });
+          });
+        });
         return res.status(200).json({
           success: true,
           message: "details verified successfully",
@@ -190,7 +205,7 @@ class ServiceProviderController {
       next(error);
     }
   }
-  
+
   async home(req: Request, res: Response, next: NextFunction) {
     try {
       const welcomeMessage = "Welcome to the home page!";
