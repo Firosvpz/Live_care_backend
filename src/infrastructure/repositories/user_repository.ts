@@ -110,55 +110,53 @@ class UserRepository implements IUserRepository {
   async getProviderSlotDetails(serviceProviderId: string): Promise<any> {
     // Fetch basic information about the service provider
     const providerDetails = await service_provider.findById(serviceProviderId, {
-        name: 1,
-        gender: 1,
-        service: 1,
-        profile_picture: 1,
-        exp_year: 1,
+      name: 1,
+      gender: 1,
+      service: 1,
+      profile_picture: 1,
+      exp_year: 1,
     });
 
     const currentDate = new Date();
-    const startOfToday = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
-    const endOfToday = new Date(startOfToday);
-    endOfToday.setHours(0, 0, 0, 0); // Set end of today
+    const startOfToday = new Date(currentDate.setHours(0, 0, 0, 0));
+    const endOfToday = new Date(currentDate.setHours(23, 59, 59, 999));
 
     // Fetch slots for the service provider
     const bookingSlotDetails = await ProviderSlotModel.aggregate([
-        {
-            $match: { serviceProviderId: serviceProviderId },
-        },
-        {
-            $unwind: "$slots",
-        },
-        {
-            $unwind: "$slots.schedule",
-        },
-        {
-            $match: {
-                $or: [
-                    // For future days, check if the date is after today
-                    { "slots.date": { $gt: endOfToday } },
-                    // For today, check if the time is later than the current time
-                    {
-                        $and: [
-                            { "slots.date": { $gte: startOfToday } },
-                            { "slots.schedule.from": { $gte: currentDate } }, // Check for upcoming time slots today
-                        ],
-                    },
-                ],
+      {
+        $match: { serviceProviderId: serviceProviderId },
+      },
+      {
+        $unwind: "$slots",
+      },
+      {
+        $unwind: "$slots.schedule",
+      },
+      {
+        $match: {
+          $or: [
+            // For future days, we just check if the date is after today
+            { "slots.date": { $gt: endOfToday } },
+            // For today, check if the time is later than the current time
+            {
+              $and: [
+                { "slots.date": { $gte: startOfToday, $lte: endOfToday } },
+                { "slots.schedule.from": { $gte: new Date() } }, // Check for upcoming time slots today
+              ],
             },
+          ],
         },
-        {
-            $sort: { "slots.date": 1, "slots.schedule.from": 1 }, // Sort by date and time
-        },
+      },
+      {
+        $sort: { "slots.date": 1, "slots.schedule.from": 1 }, // Sort by date and time
+      },
     ]);
 
     return {
-        providerDetails,
-        bookingSlotDetails,
+      providerDetails,
+      bookingSlotDetails,
     };
-}
-
+  }
 
   async bookSlot(info: any): Promise<void> {
     const { serviceProviderId, _id, date } = info;
