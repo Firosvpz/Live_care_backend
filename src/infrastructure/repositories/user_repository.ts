@@ -120,7 +120,7 @@ class UserRepository implements IUserRepository {
     const currentDate = new Date();
     const startOfToday = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
     const endOfToday = new Date(startOfToday);
-    endOfToday.setHours(23, 59, 59, 999); // Set end of today
+    endOfToday.setHours(0, 0, 0, 0); // Set end of today
 
     // Fetch slots for the service provider
     const bookingSlotDetails = await ProviderSlotModel.aggregate([
