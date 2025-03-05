@@ -18,7 +18,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: ["https://live-care-frontend-git-main-vpzfiroz-gmailcoms-projects.vercel.app/"],
+    origin: ["https://live-care-frontend-git-main-vpzfiroz-gmailcoms-projects.vercel.app"],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   }),
@@ -51,5 +51,5 @@ app.use("/api/sp", sp_router);
 app.use("/api/admin", admin_router);
 app.use("/api/payment", paymentRouter);
 app.listen(PORT, () => {
-  logger.info(`server started on port https://live-care.site`);
+  logger.info(`server started on porthttps://live-care-frontend-git-main-vpzfiroz-gmailcoms-projects.vercel.app`);
 });
