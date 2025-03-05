@@ -18,7 +18,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: ["https://live-care.site"],
+    origin: ["https://live-care-frontend-git-main-vpzfiroz-gmailcoms-projects.vercel.app/"],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   }),
